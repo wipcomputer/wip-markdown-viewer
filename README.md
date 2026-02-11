@@ -1,68 +1,60 @@
 # Markdown Viewer
 
-A lightweight, single-file markdown viewer for fast and easy document review.
+A lightweight markdown viewer with live reload. Works in all browsers including Safari.
 
 ## Features
 
-### Core Features (Both Versions)
-- **Syntax Highlighting** - 180+ languages supported via highlight.js
-- **Dark Mode** - Toggle between light and dark themes
-- **Table of Contents** - Auto-generated navigation for long documents
-- **GitHub Flavored Markdown** - Tables, task lists, and strikethrough
-- **Mermaid Diagrams** - Flowcharts, sequence diagrams, and more
-- **Math Equations** - KaTeX rendering for LaTeX expressions
-- **Print Support** - Print-optimized layouts
-
-### Web Browser Version
-- **Zero Configuration** - Just open the HTML file in any browser
-- **Drag & Drop** - Load markdown files instantly
-- **Auto-Refresh** - Chrome/Edge only via File System Access API
-- **Export HTML** - Save as standalone HTML file
-
-### BBEdit Preview Template
-- **True Auto-Refresh** - Instant updates when you save in BBEdit
-- **Seamless Integration** - Edit and preview in one app
-- **Works Everywhere** - No browser-specific APIs required
+- **Syntax Highlighting**: 180+ languages supported via highlight.js
+- **Dark Mode**: toggle between light and dark themes
+- **Table of Contents**: auto-generated navigation for long documents
+- **GitHub Flavored Markdown**: tables, task lists, and strikethrough
+- **Mermaid Diagrams**: flowcharts, sequence diagrams, and more
+- **Math Equations**: KaTeX rendering for LaTeX expressions
+- **Print Support**: print-optimized layouts
+- **Export HTML**: save as standalone HTML file
+- **Live Reload**: auto-refreshes on file save (all browsers)
 
 ## Usage
 
-### Web Browser Version
+### Local server (recommended)
 
-1. Open `markdown-viewer.html` in your browser
-2. Load a markdown file using one of two methods:
-   - **Drag and drop** - Quick loading, but no auto-refresh
-   - **Click "Load File" button** - Enables auto-refresh in Chrome/Edge
-3. Use the toolbar buttons to navigate and interact with your document
+The easiest way. Works in every browser with live reload.
 
-**Auto-Refresh Feature:** When you load a file using the "Load File" button in **Chrome** or **Edge**, the viewer will automatically detect changes to the file and refresh the display every 2 seconds. This is perfect for editing markdown in your favorite editor while previewing changes in real-time.
+```bash
+npx @wipcomputer/markdown-viewer /path/to/file.md
+```
 
-**Note:** Auto-refresh requires the File System Access API, which is only available in Chrome, Edge, and Opera. Safari and Firefox users can still use the viewer with drag-and-drop or the Load button, but will need to manually click the "Refresh" button to see updates.
+Or install globally:
+
+```bash
+npm install -g @wipcomputer/markdown-viewer
+mdview /path/to/file.md
+```
+
+Opens your browser, watches the file, auto-refreshes on save. Ctrl+C to stop.
+
+Options:
+
+```bash
+mdview --port 8080 /path/to/file.md    # Custom port (default: 3000)
+```
+
+### Static HTML (no install)
+
+Open `markdown-viewer.html` directly in your browser:
+
+1. Open `markdown-viewer.html` in any browser
+2. Drag and drop a `.md` file, or click "Load File"
+3. Auto-refresh only works in Chrome/Edge (File System Access API). Safari/Firefox need manual refresh.
 
 ### BBEdit Preview Template
 
-Use the enhanced viewer as a BBEdit preview template with **true auto-refresh** in BBEdit:
+For BBEdit users with true auto-refresh on save:
 
-**Installation:**
-1. In Finder, press `⇧⌘G` and paste: `~/Library/Application Support/BBEdit/Preview Templates/`
+1. In Finder, press `Shift+Cmd+G` and paste: `~/Library/Application Support/BBEdit/Preview Templates/`
 2. Copy `bbedit-preview-template.html` to this folder
-3. In BBEdit, open any `.md` file and press `⌃⌘P`
+3. In BBEdit, open any `.md` file and press `Ctrl+Cmd+P`
 4. Select `bbedit-preview-template.html` from the Templates menu
-
-**Benefits:**
-- ✅ **True auto-refresh** - Updates instantly when you save (no 2-second polling)
-- ✅ **Works in all browsers** - No File System Access API needed
-- ✅ **Seamless workflow** - Edit and preview in one app
-- ✅ **All features included** - Syntax highlighting, Mermaid, KaTeX, TOC, dark mode
-
-## Requirements
-
-**Web Version:**
-- Modern web browser with JavaScript enabled
-- No installation or build process required
-
-**BBEdit Version:**
-- BBEdit (macOS)
-- `bbedit-preview-template.html` copied to Preview Templates folder
 
 ## Demo
 
@@ -76,4 +68,8 @@ Load `demo/demo.md` to see all features in action.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT
+
+---
+
+Built collaboratively by Parker Todd Brooks, Lēsa (OpenClaw agent), and Claude Code (CLI).

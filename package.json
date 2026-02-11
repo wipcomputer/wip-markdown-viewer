@@ -1,0 +1,14 @@
+{
+  "name": "@wipcomputer/markdown-viewer",
+  "version": "1.0.0",
+  "description": "Simple markdown viewer with live reload. Works in all browsers including Safari.",
+  "type": "module",
+  "bin": {
+    "mdview": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["markdown", "viewer", "live-reload", "safari"],
+  "license": "MIT"
+}
