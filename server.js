@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // simple-web-markdown-viewer/server.js
-// Local server for markdown viewing with live reload. Works in all browsers.
+// Local server for markdown viewing. Works in all browsers.
 //
 // Usage:
-//   node server.js /path/to/file.md
-//   node server.js --port 3000 /path/to/file.md
+//   mdview <file.md>              Open file in browser with live reload
+//   mdview --port 8080 <file.md>  Use custom port
 //
-// Opens browser automatically. Watches file for changes and pushes updates via SSE.
+// Opens browser automatically. Watches file for changes.
 
 import { createServer } from "node:http";
 import { readFileSync, watchFile, unwatchFile, existsSync, statSync } from "node:fs";
@@ -31,7 +31,7 @@ for (let i = 0; i < args.length; i++) {
     console.log(`markdown-viewer: local server with live reload
 
 Usage:
-  mdview <file.md>              Open markdown file in browser with live reload
+  mdview <file.md>              Open file in browser with live reload
   mdview --port 8080 <file.md>  Use custom port
 
 Works in all browsers (Safari, Chrome, Firefox).`);
@@ -42,7 +42,7 @@ Works in all browsers (Safari, Chrome, Firefox).`);
 }
 
 if (!filePath) {
-  console.error("Error: no file specified. Usage: mdview <file.md>");
+  console.error("Usage: mdview <file.md>");
   process.exit(1);
 }
 
@@ -83,99 +83,148 @@ function startWatching() {
   });
 }
 
-// ── Viewer HTML with SSE injection ───────────────────────────────────
+// ── Viewer HTML ──────────────────────────────────────────────────────
 
-function getViewerHtml() {
+function injectScript(html, script) {
+  const lastIndex = html.lastIndexOf("</body>");
+  return html.slice(0, lastIndex) + script + "\n" + html.slice(lastIndex);
+}
+
+function getFileViewerHtml() {
   const viewerPath = join(__dirname, "markdown-viewer.html");
   let html = readFileSync(viewerPath, "utf-8");
 
-  // Inject SSE auto-reload and auto-load script before </body>
-  const sseScript = `
+  const script = `
     <script>
-    // SSE live reload (injected by server.js)
+    // Server mode: auto-load, refresh from server, SSE live reload
     (function() {
       const fileName = ${JSON.stringify(basename(filePath))};
 
-      // Auto-load file on page load
-      window.addEventListener('load', async function() {
-        try {
-          const res = await fetch('/api/file');
-          if (res.ok) {
-            const text = await res.text();
-            // Hide drop zone, show viewer
-            document.getElementById('drop-zone').classList.add('hidden');
-            document.getElementById('viewer-container').style.display = 'flex';
-            document.getElementById('file-name').textContent = fileName;
-            await displayMarkdown(text);
-            updateLastModified();
-            showStatus('Loaded ' + fileName, 2000);
-          }
-        } catch (err) {
-          console.error('Auto-load failed:', err);
-        }
+      async function serverLoad() {
+        const res = await fetch('/api/file');
+        if (!res.ok) throw new Error(res.statusText);
+        const text = await res.text();
+        const content = document.getElementById('markdown-content');
+        const scrollTop = content ? content.parentElement.scrollTop : 0;
+        document.getElementById('drop-zone').classList.add('hidden');
+        document.getElementById('viewer-container').style.display = 'flex';
+        document.getElementById('file-name').textContent = fileName;
+        await displayMarkdown(text);
+        lastModified = Date.now();
+        updateLastModified();
+        if (content) content.parentElement.scrollTop = scrollTop;
+      }
+
+      window.addEventListener('DOMContentLoaded', async function() {
+        await new Promise(r => setTimeout(r, 50));
+        try { await serverLoad(); } catch (err) { console.error('Load failed:', err); }
       });
 
-      // SSE connection for live reload
-      const evtSource = new EventSource('/api/events');
-      evtSource.onmessage = async function(event) {
-        if (event.data === 'reload') {
-          try {
-            const res = await fetch('/api/file');
-            if (res.ok) {
-              const text = await res.text();
-              // Preserve scroll position
-              const content = document.getElementById('markdown-content');
-              const scrollTop = content.parentElement.scrollTop;
-              await displayMarkdown(text);
-              content.parentElement.scrollTop = scrollTop;
-              document.getElementById('file-name').textContent = fileName;
-              lastModified = Date.now();
-              updateLastModified();
-              showStatus('Auto-refreshed', 1500);
-            }
-          } catch (err) {
-            console.error('Reload failed:', err);
-          }
+      window.refreshContent = async function() {
+        try {
+          await serverLoad();
+          showStatus('Refreshed', 1500);
+        } catch (err) {
+          showStatus('Error refreshing', 2000);
         }
       };
 
-      evtSource.onerror = function() {
-        console.log('SSE connection lost, reconnecting...');
+      const evtSource = new EventSource('/api/events');
+      evtSource.onmessage = async function(event) {
+        if (event.data === 'reload') {
+          try { await serverLoad(); showStatus('Auto-refreshed', 1500); }
+          catch (err) { console.error('Reload failed:', err); }
+        }
       };
     })();
     </script>`;
 
-  html = html.replace("</body>", `${sseScript}\n</body>`);
-  return html;
+  return injectScript(html, script);
+}
+
+function getLandingHtml() {
+  const viewerPath = join(__dirname, "markdown-viewer.html");
+  let html = readFileSync(viewerPath, "utf-8");
+
+  const script = `
+    <script>
+    // Landing page: persist loaded file in localStorage so Safari refresh works
+    (function() {
+      const origDisplay = window.displayMarkdown;
+      window.displayMarkdown = async function(text) {
+        localStorage.setItem('mdview-content', text);
+        return origDisplay(text);
+      };
+
+      const origLoadFile = window.loadFile;
+      window.loadFile = async function(file, isAutoRefresh) {
+        localStorage.setItem('mdview-name', file.name);
+        return origLoadFile(file, isAutoRefresh);
+      };
+
+      // On page load, restore last file from localStorage
+      window.addEventListener('DOMContentLoaded', async function() {
+        const stored = localStorage.getItem('mdview-content');
+        const name = localStorage.getItem('mdview-name');
+        if (stored) {
+          await new Promise(r => setTimeout(r, 50));
+          document.getElementById('drop-zone').classList.add('hidden');
+          document.getElementById('viewer-container').style.display = 'flex';
+          if (name) document.getElementById('file-name').textContent = name;
+          await displayMarkdown(stored);
+          lastModified = Date.now();
+          updateLastModified();
+        }
+      });
+
+      window.refreshContent = async function() {
+        const stored = localStorage.getItem('mdview-content');
+        if (stored) {
+          await displayMarkdown(stored);
+          showStatus('Refreshed', 1500);
+        } else {
+          showStatus('No file loaded', 2000);
+        }
+      };
+    })();
+    </script>`;
+
+  return injectScript(html, script);
 }
 
 // ── HTTP server ──────────────────────────────────────────────────────
 
+const fileDir = dirname(filePath);
+
 const server = createServer((req, res) => {
-  // Serve the viewer
+  // Landing page (homepage)
   if (req.url === "/" || req.url === "/index.html") {
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(getViewerHtml());
+    res.end(getLandingHtml());
     return;
   }
 
-  // API: read the markdown file
+  // File viewer (auto-load, refresh, SSE)
+  if (req.url.startsWith("/?file=")) {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(getFileViewerHtml());
+    return;
+  }
+
+  // API: read the watched file
   if (req.url === "/api/file") {
     try {
       const content = readFileSync(filePath, "utf-8");
-      res.writeHead(200, {
-        "Content-Type": "text/plain",
-        "Cache-Control": "no-cache",
-      });
+      res.writeHead(200, { "Content-Type": "text/plain", "Cache-Control": "no-cache" });
       res.end(content);
     } catch (err) {
       res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end(`Error reading file: ${err.message}`);
+      res.end(`Error: ${err.message}`);
     }
     return;
   }
 
-  // API: SSE events for live reload
+  // API: SSE events
   if (req.url === "/api/events") {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
@@ -184,31 +233,20 @@ const server = createServer((req, res) => {
     });
     res.write(`data: connected\n\n`);
     sseClients.add(res);
-
-    req.on("close", () => {
-      sseClients.delete(res);
-    });
+    req.on("close", () => { sseClients.delete(res); });
     return;
   }
 
-  // Serve images relative to the markdown file's directory
-  const fileDir = dirname(filePath);
+  // Serve static files (images) relative to the markdown file's directory
   const requestedPath = resolve(fileDir, req.url.slice(1));
   if (requestedPath.startsWith(fileDir) && existsSync(requestedPath) && statSync(requestedPath).isFile()) {
     const ext = extname(requestedPath).toLowerCase();
     const mimeTypes = {
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".gif": "image/gif",
-      ".svg": "image/svg+xml",
-      ".webp": "image/webp",
-      ".ico": "image/x-icon",
-      ".css": "text/css",
-      ".js": "application/javascript",
+      ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+      ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
+      ".ico": "image/x-icon", ".css": "text/css", ".js": "application/javascript",
     };
-    const contentType = mimeTypes[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": contentType });
+    res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
     res.end(readFileSync(requestedPath));
     return;
   }
@@ -220,19 +258,17 @@ const server = createServer((req, res) => {
 // ── Start ────────────────────────────────────────────────────────────
 
 server.listen(port, "127.0.0.1", () => {
-  const url = `http://127.0.0.1:${port}`;
-  console.log(`Markdown viewer: ${url}`);
+  const fileUrl = `http://127.0.0.1:${port}/?file=${encodeURIComponent(filePath)}`;
+  console.log(`Markdown viewer: http://127.0.0.1:${port}`);
   console.log(`Watching: ${filePath}`);
   console.log(`Press Ctrl+C to stop.\n`);
 
   startWatching();
 
-  // Open browser
   const openCmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} "${url}"`);
+  exec(`${openCmd} "${fileUrl}"`);
 });
 
-// Clean up on exit
 process.on("SIGINT", () => {
   unwatchFile(filePath);
   server.close();
