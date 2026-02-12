@@ -126,7 +126,7 @@ function getViewerHtml(filePath) {
 
       window.addEventListener('DOMContentLoaded', async function() {
         await new Promise(r => setTimeout(r, 50));
-        try { await serverLoad(); } catch (err) { console.error('Load failed:', err); }
+        try { await serverLoad(); setLiveStatus('live'); } catch (err) { console.error('Load failed:', err); }
       });
 
       window.refreshContent = async function() {
@@ -138,13 +138,20 @@ function getViewerHtml(filePath) {
         }
       };
 
-      const evtSource = new EventSource('/api/events?path=' + encodedPath);
-      evtSource.onmessage = async function(event) {
-        if (event.data === 'reload') {
-          try { await serverLoad(); showStatus('Auto-refreshed', 1500); }
-          catch (err) { console.error('Reload failed:', err); }
-        }
-      };
+      function connectSSE() {
+        const evtSource = new EventSource('/api/events?path=' + encodedPath);
+        evtSource.onmessage = async function(event) {
+          if (event.data === 'reload') {
+            try { await serverLoad(); showStatus('Auto-refreshed', 1500); }
+            catch (err) { console.error('Reload failed:', err); }
+          }
+        };
+        evtSource.onerror = function() {
+          evtSource.close();
+          setTimeout(connectSSE, 2000);
+        };
+      }
+      connectSSE();
     })();
     </script>`;
 
@@ -175,6 +182,7 @@ function getSessionViewerHtml(fileName) {
         document.getElementById('drop-zone').classList.add('hidden');
         document.getElementById('viewer-container').style.display = 'flex';
         document.getElementById('file-name').textContent = fileName;
+        setLiveStatus('static');
         await displayMarkdown(content);
         lastModified = Date.now();
         updateLastModified();

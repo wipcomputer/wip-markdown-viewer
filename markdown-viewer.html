@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIP Computer — Live MD Viewer</title>
+    <title>WIP Computer: Live .md Viewer</title>
     <!-- Markdown parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- Syntax highlighting -->
@@ -27,6 +27,64 @@
             --accent-color: #2c2926;
             --link-color: #1a1714;
             --table-stripe: #faf9f7;
+        }
+
+        [data-style="github"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-code: #f6f8fa;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-heading: #1f2328;
+            --border-color: #d1d9e0;
+            --accent-color: #1f2328;
+            --link-color: #0969da;
+            --table-stripe: #f6f8fa;
+        }
+
+        [data-style="github"][data-theme="dark"] {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-code: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8d96a0;
+            --text-heading: #e6edf3;
+            --border-color: #30363d;
+            --accent-color: #e6edf3;
+            --link-color: #58a6ff;
+            --table-stripe: #161b22;
+        }
+
+        [data-style="github"] #markdown-content h1 {
+            font-size: 2em;
+            letter-spacing: normal;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        [data-style="github"] #markdown-content h2 {
+            font-size: 1.5em;
+            letter-spacing: normal;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        [data-style="github"] #markdown-content h3 {
+            font-size: 1.25em;
+            letter-spacing: normal;
+        }
+
+        [data-style="github"] #markdown-content h4 {
+            font-size: 1em;
+        }
+
+        [data-style="github"] #markdown-content {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        [data-style="github"] #markdown-content a {
+            color: var(--link-color);
         }
 
         [data-theme="dark"] {
@@ -195,6 +253,163 @@
             color: var(--text-heading);
         }
 
+        #live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75em;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        #live-status .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        #live-status.live { color: #2a7d3f; }
+        #live-status.live .dot { background: #34c759; }
+        #live-status.static { color: #a0724e; }
+        #live-status.static .dot { background: #e89a3c; }
+
+        .dark-mode #live-status.live { color: #5dd879; }
+        .dark-mode #live-status.static { color: #e8a654; }
+
+        #folder-warning, #theme-dropdown, #theme-prompt-modal {
+            position: absolute;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.8em;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            z-index: 100;
+            display: none;
+        }
+
+        #folder-warning {
+            top: 48px;
+            right: 80px;
+            padding: 12px 16px;
+            max-width: 260px;
+            line-height: 1.5;
+        }
+
+        #folder-warning.show { display: block; }
+
+        #theme-dropdown {
+            top: 48px;
+            right: 140px;
+            padding: 4px 0;
+            min-width: 160px;
+        }
+
+        #theme-dropdown.show { display: block; }
+
+        #theme-dropdown .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.85em;
+            color: var(--text-primary);
+        }
+
+        #theme-dropdown .theme-option:hover {
+            background: var(--bg-secondary);
+        }
+
+        #theme-dropdown .theme-option.active {
+            font-weight: 600;
+        }
+
+        #theme-dropdown .theme-option .check {
+            width: 14px;
+            font-size: 0.9em;
+        }
+
+        #theme-dropdown .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        #theme-prompt-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 24px 28px;
+            max-width: 420px;
+            width: 90%;
+            line-height: 1.6;
+            border-radius: 12px;
+        }
+
+        #theme-prompt-modal.show { display: block; }
+
+        #theme-prompt-modal h3 {
+            margin-bottom: 12px;
+            font-size: 1em;
+            color: var(--text-heading);
+        }
+
+        #theme-prompt-modal .prompt-text {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        #theme-prompt-modal .prompt-text:hover {
+            border-color: var(--text-secondary);
+        }
+
+        #theme-prompt-modal .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        #theme-prompt-modal button {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        #theme-prompt-modal button.primary {
+            background: var(--text-heading);
+            color: var(--bg-primary);
+            border-color: var(--text-heading);
+        }
+
+        #theme-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+            display: none;
+        }
+
+        #theme-modal-overlay.show { display: block; }
+
         #last-updated {
             font-size: 0.8em;
             color: var(--text-secondary);
@@ -329,6 +544,19 @@
             margin: 20px 0 8px;
             color: var(--text-heading);
             font-weight: 600;
+        }
+
+        #markdown-content h3 + h1,
+        #markdown-content h3 + h2,
+        #markdown-content h4 + h1,
+        #markdown-content h4 + h2,
+        #markdown-content h5 + h1,
+        #markdown-content h6 + h1 {
+            margin-top: 0;
+        }
+
+        #markdown-content h6 {
+            margin-bottom: 0;
         }
 
         #markdown-content p {
@@ -565,11 +793,11 @@
     <div id="drop-zone">
         <div class="drop-message">
             <div class="brand">WIP Computer</div>
-            <h1>Live MD Viewer</h1>
-            <p class="tagline">Real-time markdown preview.<br>Drop a file or open one to start.</p>
+            <h1>Live .md Viewer</h1>
+            <p class="tagline">For real-time preview, tell your AI<br>to open a file here together.</p>
             <div class="drop-border">
-                <button onclick="document.getElementById('file-input-home').click()">Open File</button>
-                <p class="drop-hint">or drag and drop anywhere</p>
+                <button onclick="document.getElementById('file-input-home').click()">Quick View</button>
+                <p class="drop-hint">Quick View doesn't update in real-time.</p>
             </div>
             <input type="file" id="file-input-home" accept=".md,.markdown" style="display: none;" onchange="handleHomeFileSelect(event)">
         </div>
@@ -579,12 +807,21 @@
         <div id="header">
             <div id="file-info">
                 <span id="file-name">No file loaded</span>
+                <span id="live-status"></span>
                 <span id="last-updated"></span>
             </div>
             <div id="controls">
                 <button onclick="toggleTOC()" title="Table of Contents" aria-label="Toggle Table of Contents"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+                <button id="theme-btn" onclick="toggleThemeDropdown()" title="Theme" aria-label="Theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m6.34 6.34 2.83 2.83"/><path d="M2 12h4"/><path d="m6.34 17.66 2.83-2.83"/><path d="M12 18v4"/><path d="m17.66 17.66-2.83-2.83"/><path d="M18 12h4"/><path d="m17.66 6.34-2.83 2.83"/></svg></button>
+                <div id="theme-dropdown">
+                    <button class="theme-option active" onclick="setStyle('wip')"><span class="check">✓</span> WIP Theme</button>
+                    <button class="theme-option" onclick="setStyle('github')"><span class="check"></span> GitHub Theme</button>
+                    <div class="divider"></div>
+                    <button class="theme-option" onclick="showThemePrompt()"><span class="check">+</span> Add Theme...</button>
+                </div>
                 <button onclick="toggleDarkMode()" title="Toggle Theme" aria-label="Toggle Dark Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-                <button onclick="loadNewFile()" title="Open File" aria-label="Load New File"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg></button>
+                <button onclick="showFolderWarning()" title="Quick View" aria-label="Quick View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg></button>
+                <div id="folder-warning">Opening a file this way won't connect your AI. For live updates, tell your AI to open the file with .md viewer.<br><br><a href="#" onclick="dismissWarningAndOpen(event)" style="color: var(--text-heading); font-weight: 600;">Open anyway</a></div>
                 <button onclick="clearViewer()" title="Home" aria-label="Clear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                 <input type="file" id="file-input" accept=".md,.markdown" style="display: none;" onchange="handleFileSelect(event)">
             </div>
@@ -601,6 +838,15 @@
     </div>
 
     <div id="status-message" class="status-message"></div>
+    <div id="theme-modal-overlay" onclick="closeThemePrompt()"></div>
+    <div id="theme-prompt-modal">
+        <h3>Add a Custom Theme</h3>
+        <div class="prompt-text" onclick="copyThemePrompt()" title="Click to copy">Tell your AI:<br><br>"Add a new theme called <b>[name]</b> to the .md viewer."<br><br><b>Available tokens:</b><br><code style="font-size:0.85em">--bg-primary</code> page background<br><code style="font-size:0.85em">--bg-secondary</code> sidebar, header<br><code style="font-size:0.85em">--bg-code</code> code blocks<br><code style="font-size:0.85em">--text-primary</code> body text<br><code style="font-size:0.85em">--text-secondary</code> muted text<br><code style="font-size:0.85em">--text-heading</code> headings<br><code style="font-size:0.85em">--border-color</code> borders<br><code style="font-size:0.85em">--link-color</code> links<br><code style="font-size:0.85em">--table-stripe</code> alternating rows<br><br>Plus heading sizes, letter-spacing, and font overrides via <code style="font-size:0.85em">[data-style="name"]</code> selectors.</div>
+        <div class="modal-actions">
+            <button onclick="closeThemePrompt()">Close</button>
+            <button class="primary" onclick="copyThemePrompt()">Copy Prompt</button>
+        </div>
+    </div>
 
     <script>
         let currentFile = null;
@@ -812,7 +1058,7 @@
         }
 
         function addHeadingIds() {
-            const headings = document.querySelectorAll('#markdown-content h1, #markdown-content h2, #markdown-content h3, #markdown-content h4');
+            const headings = document.querySelectorAll('#markdown-content h1, #markdown-content h2, #markdown-content h3');
             headings.forEach((heading, index) => {
                 if (!heading.id) {
                     const text = heading.textContent.trim();
@@ -830,7 +1076,7 @@
             const tocList = document.getElementById('toc-list');
             tocList.innerHTML = '';
 
-            const headings = document.querySelectorAll('#markdown-content h1, #markdown-content h2, #markdown-content h3, #markdown-content h4');
+            const headings = document.querySelectorAll('#markdown-content h1, #markdown-content h2, #markdown-content h3');
 
             if (headings.length === 0) {
                 tocList.innerHTML = '<li style="color: var(--text-secondary); font-style: italic;">No headings found</li>';
@@ -949,6 +1195,40 @@
             document.getElementById('file-input').click();
         }
 
+        function showFolderWarning() {
+            const warning = document.getElementById('folder-warning');
+            warning.classList.toggle('show');
+            if (warning.classList.contains('show')) {
+                setTimeout(() => {
+                    document.addEventListener('click', dismissFolderWarning, { once: true });
+                }, 0);
+            }
+        }
+
+        function dismissFolderWarning(e) {
+            const warning = document.getElementById('folder-warning');
+            if (!warning.contains(e.target)) {
+                warning.classList.remove('show');
+            }
+        }
+
+        function dismissWarningAndOpen(e) {
+            e.preventDefault();
+            document.getElementById('folder-warning').classList.remove('show');
+            loadNewFile();
+        }
+
+        function setLiveStatus(mode, agentName) {
+            const el = document.getElementById('live-status');
+            if (mode === 'live') {
+                el.className = 'live';
+                el.innerHTML = '<span class="dot"></span>' + (agentName || 'AI') + ' is editing';
+            } else {
+                el.className = 'static';
+                el.innerHTML = '<span class="dot"></span>No AI is editing this file';
+            }
+        }
+
         function updateLastModified() {
             const date = new Date(lastModified);
             const formatted = date.toLocaleString();
@@ -966,6 +1246,61 @@
         }
 
         // Dark Mode Functions
+        function toggleThemeDropdown() {
+            const dropdown = document.getElementById('theme-dropdown');
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                updateThemeChecks();
+                setTimeout(() => {
+                    document.addEventListener('click', closeThemeDropdown, { once: true });
+                }, 0);
+            }
+        }
+
+        function closeThemeDropdown(e) {
+            const dropdown = document.getElementById('theme-dropdown');
+            if (e && dropdown.contains(e.target)) return;
+            dropdown.classList.remove('show');
+        }
+
+        function updateThemeChecks() {
+            const current = document.documentElement.getAttribute('data-style') || 'wip';
+            const options = document.querySelectorAll('#theme-dropdown .theme-option');
+            options.forEach(opt => {
+                const style = opt.getAttribute('onclick')?.match(/setStyle\('(\w+)'\)/)?.[1];
+                if (style) {
+                    opt.classList.toggle('active', style === current);
+                    opt.querySelector('.check').textContent = style === current ? '✓' : '';
+                }
+            });
+        }
+
+        function setStyle(style) {
+            document.documentElement.setAttribute('data-style', style);
+            localStorage.setItem('style', style);
+            updateThemeChecks();
+            document.getElementById('theme-dropdown').classList.remove('show');
+            showStatus(style === 'github' ? 'GitHub Theme' : 'WIP Theme', 1500);
+        }
+
+        function showThemePrompt() {
+            document.getElementById('theme-dropdown').classList.remove('show');
+            document.getElementById('theme-modal-overlay').classList.add('show');
+            document.getElementById('theme-prompt-modal').classList.add('show');
+        }
+
+        function closeThemePrompt() {
+            document.getElementById('theme-modal-overlay').classList.remove('show');
+            document.getElementById('theme-prompt-modal').classList.remove('show');
+        }
+
+        function copyThemePrompt() {
+            const text = 'Add a new theme called "[name]" to the .md viewer. Add a [data-style="name"] CSS block in markdown-viewer.html with these tokens: --bg-primary, --bg-secondary, --bg-code, --text-primary, --text-secondary, --text-heading, --border-color, --link-color, --table-stripe. You can also override heading sizes, letter-spacing, and fonts. Add it to the theme dropdown too.';
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('Prompt copied', 1500);
+            });
+        }
+
         function toggleDarkMode() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
@@ -1004,6 +1339,10 @@
                     highlightTheme.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
                     mermaid.initialize({ theme: 'dark' });
                 }
+            }
+            const savedStyle = localStorage.getItem('style');
+            if (savedStyle) {
+                document.documentElement.setAttribute('data-style', savedStyle);
             }
         }
 

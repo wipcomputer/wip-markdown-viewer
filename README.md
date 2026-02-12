@@ -1,4 +1,5 @@
-# WIP Computer. Live MD Viewer
+###### WIP Computer
+# Live .md Viewer
 
 See your documents update in real time as you and your AI edit them together.
 
