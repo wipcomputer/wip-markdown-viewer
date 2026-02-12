@@ -1,56 +1,52 @@
-# WIP Computer — Live MD Viewer
+# WIP Computer. Live MD Viewer
 
-See your markdown update in real time as you and your AI edit together.
+See your documents update in real time as you and your AI edit them together.
 
-Open a README, a project doc, or any `.md` file in the viewer — then keep working on it in your editor or with an AI agent like Claude Code, Cursor, or Copilot. Every save hits the browser instantly. No refresh, no rebuild, no waiting.
+## Get Started
 
-## Why
+Open your AI coding tool and say:
 
-You're writing a README with Claude Code. Or pair-editing a design doc with Cursor. Or reviewing changes an agent just made to your project docs. You want to *see* the markdown rendered — live — as it's being written.
-
-That's what this does. Start the server, open your file, and watch it update as the AI works.
-
-## Quick Start
-
-```bash
-node server.js
+```
+Clone https://github.com/wipcomputer/wip-markdown-viewer,
+start the server, and add live viewer support to this project.
 ```
 
-Opens http://127.0.0.1:3000/. Pick a file or drag one in. Done.
+Your AI will clone the repo, start the server, and add the right instructions to your project so it knows to open the viewer whenever you edit markdown together. That's it.
 
 ## How It Works
 
-1. Open a `.md` file in the viewer
-2. The server watches the file on disk (500ms polling)
-3. When the file changes — you saved, your AI saved, anything saved — the server pushes an update via SSE
-4. The browser re-renders instantly, preserving your scroll position
+1. You and your AI start editing a markdown file
+2. Your AI opens it in your browser via the viewer
+3. The server watches the file on disk
+4. Every save re-renders the page instantly. No refresh needed.
 
-Open multiple tabs to watch multiple files at the same time.
+Open multiple tabs to work on multiple documents at once.
+
+## Supported Tools
+
+This works with any AI agent that can run shell commands and edit files.
+
+| Tool | Instruction file | How to add support |
+|------|-----------------|-------------------|
+| Claude Code | `CLAUDE.md` | Add the snippet below to your project's `CLAUDE.md` |
+| OpenAI Codex CLI | `AGENTS.md` | Add the snippet below to your project's `AGENTS.md` |
+| Cursor | `.cursorrules` | Add the snippet below to `.cursorrules` |
+| Windsurf | `.windsurfrules` | Add the snippet below to `.windsurfrules` |
+| OpenClaw | `SKILL.md` | Install the `live-viewer` skill |
+| Any other agent | Whatever config it reads | Add the snippet below |
+
+If your tool reads a project-level instruction file... it works. The snippet is the same for all of them.
 
 ## Features
 
-- **Live reload** — SSE-powered, works in all browsers including Safari
-- **Multi-file** — each tab watches its own file independently
-- **GitHub Flavored Markdown** — tables, task lists, strikethrough
-- **Syntax highlighting** — 180+ languages via highlight.js
-- **Dark mode** — light and dark themes
-- **Table of contents** — auto-generated from headings
-- **Mermaid diagrams** — flowcharts, sequence diagrams, and more
-- **Math equations** — KaTeX rendering for LaTeX
-- **Drag and drop** — works without the server too (no live reload)
-
-## Options
-
-```bash
-node server.js --port 8080    # Custom port (default: 3000)
-```
-
-## Use Cases
-
-- **AI pair editing** — watch your README render live while Claude Code, Cursor, or Copilot edits it
-- **Documentation review** — open a doc an agent just updated and see exactly what changed
-- **Writing** — draft markdown with instant visual feedback
-- **Presentations** — live-edit slides or docs while sharing your screen
+- **Live reload:** SSE-powered, works in all browsers including Safari
+- **Multi-file:** each tab watches its own file independently
+- **GitHub Flavored Markdown:** tables, task lists, strikethrough
+- **Syntax highlighting:** 180+ languages via highlight.js
+- **Dark mode:** light and dark themes
+- **Table of contents:** auto-generated from headings
+- **Mermaid diagrams:** flowcharts, sequence diagrams, and more
+- **Math equations:** KaTeX rendering for LaTeX
 
 ## License
 
@@ -58,4 +54,53 @@ MIT
 
 ---
 
-Built by Parker Todd Brooks, with Claude Code.
+Built by Parker Todd Brooks, with Claude Code and Lesa (OpenClaw).
+
+---
+
+## For AI Agents
+
+Everything below is for you, the AI agent. The human doesn't need to read this. When the user asks you to set up the live markdown viewer, follow these steps.
+
+### Step 1. Start the Server
+
+The viewer repo should be cloned somewhere on the machine. After cloning, resolve the full path and start the server:
+
+```bash
+node {absolute path to wip-markdown-viewer}/server.js &
+```
+
+Use the real path, not a placeholder. The server runs at `http://127.0.0.1:3000` and stays running in the background.
+
+### Step 2. Add the Snippet to Your Project
+
+Add the following to whatever instruction file your tool uses (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`, or equivalent). The content is the same regardless of the file:
+
+```markdown
+## Live Markdown Viewer
+
+A live viewer server is running at http://127.0.0.1:3000.
+
+When editing a .md file, open it in the live viewer first so the user can see
+your changes in real time:
+
+  open "http://127.0.0.1:3000/view?path={absolute path to the file}"
+
+Then make your edits. The user sees every change as you write. No refresh needed.
+Do this every time you edit a markdown file.
+```
+
+### Step 3. Every Time You Edit Markdown
+
+1. Run: `open "http://127.0.0.1:3000/view?path={absolute path to the file}"`
+2. Edit the file
+3. The user sees it update live in their browser
+
+That's it. The server watches the file and pushes updates via SSE. You don't need to do anything else.
+
+### Notes
+
+- The `open` command works on macOS. On Linux use `xdg-open`. On Windows use `start`.
+- Each file gets its own URL. Multiple files can be viewed in separate tabs.
+- The server reads the file fresh on every change. No caching.
+- If the server isn't running, start it. It doesn't need any arguments.
