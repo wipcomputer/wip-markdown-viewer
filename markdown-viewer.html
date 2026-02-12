@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Viewer</title>
+    <title>WIP Computer — Live MD Viewer</title>
     <!-- Markdown parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- Syntax highlighting -->
@@ -17,33 +17,29 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <style>
         :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --bg-code: #f8f8f8;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --text-heading: #2c3e50;
-            --border-color: #e0e0e0;
-            --gradient-start: #667eea;
-            --gradient-end: #764ba2;
-            --accent-color: #667eea;
-            --link-color: #667eea;
-            --table-stripe: #f9f9f9;
+            --bg-primary: #fcfbf9;
+            --bg-secondary: #f6f5f3;
+            --bg-code: #f6f5f3;
+            --text-primary: #2c2926;
+            --text-secondary: #888;
+            --text-heading: #1a1714;
+            --border-color: #e8e7e5;
+            --accent-color: #2c2926;
+            --link-color: #1a1714;
+            --table-stripe: #faf9f7;
         }
 
         [data-theme="dark"] {
-            --bg-primary: #1e1e1e;
-            --bg-secondary: #121212;
-            --bg-code: #2d2d2d;
+            --bg-primary: #111;
+            --bg-secondary: #0a0a0a;
+            --bg-code: #1a1a1a;
             --text-primary: #e0e0e0;
-            --text-secondary: #b0b0b0;
-            --text-heading: #ffffff;
-            --border-color: #404040;
-            --gradient-start: #667eea;
-            --gradient-end: #764ba2;
-            --accent-color: #8b9ef7;
-            --link-color: #8b9ef7;
-            --table-stripe: #252525;
+            --text-secondary: #888;
+            --text-heading: #fff;
+            --border-color: #2a2a2a;
+            --accent-color: #ccc;
+            --link-color: #ddd;
+            --table-stripe: #151515;
         }
 
         * {
@@ -71,7 +67,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            background: #f6f5f3;
             transition: all 0.3s ease;
             z-index: 1000;
         }
@@ -81,52 +77,92 @@
         }
 
         #drop-zone.dragover {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: #edecea;
+        }
+
+        #drop-zone.dragover .drop-border {
+            border-color: #222;
         }
 
         .drop-message {
             text-align: center;
-            color: white;
+            color: #222;
             pointer-events: none;
+            max-width: 440px;
+        }
+
+        .drop-message .brand {
+            font-size: 0.7em;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 16px;
         }
 
         .drop-message h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            font-weight: 300;
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: #222;
+            line-height: 1.1;
         }
 
-        .drop-message p {
-            font-size: 1.2em;
-            opacity: 0.9;
-            margin-bottom: 10px;
+        .drop-message .tagline {
+            font-size: 1.05em;
+            color: #888;
+            margin-bottom: 48px;
+            line-height: 1.6;
+            font-weight: 400;
         }
 
-        .drop-message .tip {
-            font-size: 0.9em;
-            opacity: 0.7;
-            margin-top: 30px;
-            font-style: italic;
+        .drop-border {
+            pointer-events: auto;
+            border: 1.5px dashed #ccc;
+            border-radius: 12px;
+            padding: 44px 40px;
+            transition: border-color 0.3s ease;
+        }
+
+        .drop-border:hover {
+            border-color: #aaa;
+        }
+
+        .drop-icon {
+            font-size: 1.6em;
+            margin-bottom: 16px;
+            color: #bbb;
         }
 
         .drop-message button {
             pointer-events: auto;
-            background: rgba(255,255,255,0.9);
-            color: #667eea;
+            background: #222;
+            color: #fff;
             border: none;
-            padding: 12px 30px;
+            padding: 12px 32px;
             border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 500;
+            font-size: 0.95em;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .drop-message button:hover {
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .drop-message button:active {
+            transform: translateY(0);
+        }
+
+        .drop-hint {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 16px;
+            font-weight: 400;
         }
 
         #viewer-container {
@@ -136,14 +172,14 @@
         }
 
         #header {
-            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-            color: white;
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            min-height: 60px;
+            min-height: 52px;
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -151,37 +187,40 @@
         #file-info {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
 
         #file-name {
-            font-size: 1.2em;
-            font-weight: 500;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-heading);
         }
 
         #last-updated {
-            font-size: 0.9em;
-            opacity: 0.9;
+            font-size: 0.8em;
+            color: var(--text-secondary);
         }
 
         #controls {
             display: flex;
-            gap: 10px;
+            gap: 6px;
         }
 
-        button {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
+        #controls button {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
+            transition: all 0.2s ease;
+            font-size: 13px;
         }
 
-        button:hover {
-            background: rgba(255,255,255,0.3);
+        #controls button:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
         }
 
         #content {
@@ -512,11 +551,14 @@
 <body>
     <div id="drop-zone">
         <div class="drop-message">
-            <h1>📄 Markdown Viewer</h1>
-            <p>Drag and drop a .md file here to view it</p>
-            <p>— or —</p>
-            <button onclick="loadNewFile()">📂 Load File</button>
-            <p class="tip" id="auto-refresh-tip" style="display: none;">💡 Tip: Using "Load File" enables auto-refresh</p>
+            <div class="brand">WIP Computer</div>
+            <h1>Live MD Viewer</h1>
+            <p class="tagline">Real-time markdown preview.<br>Drop a file or open one to start.</p>
+            <div class="drop-border">
+                <button onclick="document.getElementById('file-input-home').click()">Open File</button>
+                <p class="drop-hint">or drag and drop anywhere</p>
+            </div>
+            <input type="file" id="file-input-home" accept=".md,.markdown" style="display: none;" onchange="handleHomeFileSelect(event)">
         </div>
     </div>
 
@@ -530,9 +572,7 @@
                 <button onclick="toggleTOC()" title="Toggle Table of Contents" aria-label="Toggle Table of Contents">📑 TOC</button>
                 <button onclick="toggleDarkMode()" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌓 Theme</button>
                 <button onclick="loadNewFile()" title="Load New File" aria-label="Load New File">📂 Load</button>
-                <button onclick="refreshContent()" title="Refresh" aria-label="Refresh File">🔄 Refresh</button>
-                <button onclick="exportHTML()" title="Export HTML" aria-label="Export as HTML">💾 Export</button>
-                <button onclick="printDocument()" title="Print" aria-label="Print Document">🖨️ Print</button>
+                <button onclick="clearViewer()" title="Clear and return to homepage" aria-label="Clear">⏻</button>
                 <input type="file" id="file-input" accept=".md,.markdown" style="display: none;" onchange="handleFileSelect(event)">
             </div>
         </div>
@@ -581,18 +621,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupDragAndDrop();
             loadThemePreference();
-
-            // Update auto-refresh tip based on browser support
-            const tip = document.getElementById('auto-refresh-tip');
-            if (tip) {
-                if ('showOpenFilePicker' in window) {
-                    tip.textContent = '💡 Tip: Using "Load File" enables auto-refresh';
-                } else {
-                    tip.textContent = '💡 Tip: In Chrome/Edge "Load File" enables auto-refresh';
-                }
-                tip.style.display = 'block';
-            }
         });
+
+        function handleHomeFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && (file.name.endsWith('.md') || file.name.endsWith('.markdown'))) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    sessionStorage.setItem('mdview-content', ev.target.result);
+                    sessionStorage.setItem('mdview-name', file.name);
+                    window.location.href = '/view?name=' + encodeURIComponent(file.name);
+                };
+                reader.readAsText(file);
+            }
+        }
 
         function setupDragAndDrop() {
             const dropZone = document.getElementById('drop-zone');
@@ -641,7 +683,18 @@
             if (files.length > 0) {
                 const file = files[0];
                 if (file.name.endsWith('.md') || file.name.endsWith('.markdown')) {
-                    loadFile(file);
+                    // If on homepage, read content and navigate to viewer
+                    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            sessionStorage.setItem('mdview-content', ev.target.result);
+                            sessionStorage.setItem('mdview-name', file.name);
+                            window.location.href = '/view?name=' + encodeURIComponent(file.name);
+                        };
+                        reader.readAsText(file);
+                    } else {
+                        loadFile(file);
+                    }
                 } else {
                     showStatus('Please drop a Markdown file (.md or .markdown)', 3000);
                 }
@@ -737,8 +790,9 @@
                 throwOnError: false
             });
 
-            // Generate Table of Contents
+            // Generate Table of Contents and show it
             generateTOC();
+            document.getElementById('toc-sidebar').classList.add('visible');
 
             // Add IDs to headings for TOC links
             addHeadingIds();
@@ -874,30 +928,11 @@
             }
         }
 
-        async function loadNewFile() {
-            // Try to use File System Access API first
-            if ('showOpenFilePicker' in window) {
-                try {
-                    const [handle] = await window.showOpenFilePicker({
-                        types: [{
-                            description: 'Markdown Files',
-                            accept: { 'text/markdown': ['.md', '.markdown'] }
-                        }],
-                        multiple: false
-                    });
-                    fileHandle = handle;
-                    const file = await handle.getFile();
-                    await loadFile(file);
-                    return;
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        console.log('File System Access API error:', err);
-                    }
-                    return; // User cancelled, don't proceed
-                }
-            }
+        function clearViewer() {
+            window.location.href = '/';
+        }
 
-            // Fallback: Use traditional file input for Safari/Firefox
+        function loadNewFile() {
             document.getElementById('file-input').click();
         }
 

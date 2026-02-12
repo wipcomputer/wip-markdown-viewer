@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // simple-web-markdown-viewer/server.js
-// Local server for markdown viewing. Works in all browsers.
+// Multi-file markdown viewer with live reload. Works in all browsers.
 //
 // Usage:
-//   mdview <file.md>              Open file in browser with live reload
-//   mdview --port 8080 <file.md>  Use custom port
+//   mdview                         Start server, open homepage
+//   mdview --port 8080             Use custom port
 //
-// Opens browser automatically. Watches file for changes.
+// Opens browser to http://127.0.0.1:3000/ — pick files, view with live reload.
 
 import { createServer } from "node:http";
 import { readFileSync, watchFile, unwatchFile, existsSync, statSync } from "node:fs";
@@ -20,7 +20,6 @@ const __dirname = dirname(__filename);
 // ── Parse args ───────────────────────────────────────────────────────
 
 let port = 3000;
-let filePath = null;
 
 const args = process.argv.slice(2);
 for (let i = 0; i < args.length; i++) {
@@ -28,69 +27,69 @@ for (let i = 0; i < args.length; i++) {
     port = parseInt(args[i + 1], 10);
     i++;
   } else if (args[i] === "--help" || args[i] === "-h") {
-    console.log(`markdown-viewer: local server with live reload
+    console.log(`mdview: live markdown viewer
 
 Usage:
-  mdview <file.md>              Open file in browser with live reload
-  mdview --port 8080 <file.md>  Use custom port
+  mdview                         Start server, open homepage
+  mdview --port 8080             Use custom port
 
+Opens browser to http://127.0.0.1:PORT/ — pick files, view with live reload.
 Works in all browsers (Safari, Chrome, Firefox).`);
     process.exit(0);
-  } else if (!args[i].startsWith("-")) {
-    filePath = resolve(args[i]);
   }
 }
 
-if (!filePath) {
-  console.error("Usage: mdview <file.md>");
-  process.exit(1);
-}
+// ── Multi-file watcher ──────────────────────────────────────────────
 
-if (!existsSync(filePath)) {
-  console.error(`Error: file not found: ${filePath}`);
-  process.exit(1);
-}
+// Map<absolutePath, { clients: Set<res>, lastMtime: number }>
+const watchers = new Map();
 
-// ── SSE clients ──────────────────────────────────────────────────────
+function startWatching(filePath) {
+  if (watchers.has(filePath)) return;
 
-const sseClients = new Set();
+  let lastMtime = 0;
+  try { lastMtime = statSync(filePath).mtimeMs; } catch {}
 
-function notifyClients() {
-  for (const res of sseClients) {
-    try {
-      res.write(`data: reload\n\n`);
-    } catch {
-      sseClients.delete(res);
-    }
-  }
-}
-
-// ── File watcher ─────────────────────────────────────────────────────
-
-let lastMtime = 0;
-
-function startWatching() {
-  try {
-    lastMtime = statSync(filePath).mtimeMs;
-  } catch {}
+  const entry = { clients: new Set(), lastMtime };
+  watchers.set(filePath, entry);
 
   watchFile(filePath, { interval: 500 }, (curr) => {
-    if (curr.mtimeMs > lastMtime) {
-      lastMtime = curr.mtimeMs;
+    if (curr.mtimeMs > entry.lastMtime) {
+      entry.lastMtime = curr.mtimeMs;
       console.log(`File changed: ${basename(filePath)}`);
-      notifyClients();
+      for (const client of entry.clients) {
+        try { client.write(`data: reload\n\n`); }
+        catch { entry.clients.delete(client); }
+      }
     }
   });
 }
 
-// ── Viewer HTML ──────────────────────────────────────────────────────
-
-function injectScript(html, script) {
-  const lastIndex = html.lastIndexOf("</body>");
-  return html.slice(0, lastIndex) + script + "\n" + html.slice(lastIndex);
+function stopWatching(filePath) {
+  const entry = watchers.get(filePath);
+  if (entry && entry.clients.size === 0) {
+    unwatchFile(filePath);
+    watchers.delete(filePath);
+  }
 }
 
-function getFileViewerHtml() {
+function addClient(filePath, res) {
+  startWatching(filePath);
+  const entry = watchers.get(filePath);
+  entry.clients.add(res);
+}
+
+function removeClient(filePath, res) {
+  const entry = watchers.get(filePath);
+  if (entry) {
+    entry.clients.delete(res);
+    stopWatching(filePath);
+  }
+}
+
+// ── Viewer HTML with SSE injection ──────────────────────────────────
+
+function getViewerHtml(filePath) {
   const viewerPath = join(__dirname, "markdown-viewer.html");
   let html = readFileSync(viewerPath, "utf-8");
 
@@ -98,17 +97,27 @@ function getFileViewerHtml() {
     <script>
     // Server mode: auto-load, refresh from server, SSE live reload
     (function() {
+      const filePath = ${JSON.stringify(filePath)};
       const fileName = ${JSON.stringify(basename(filePath))};
+      const encodedPath = encodeURIComponent(filePath);
+      let showingFullPath = false;
 
       async function serverLoad() {
-        const res = await fetch('/api/file');
+        const res = await fetch('/api/file?path=' + encodedPath);
         if (!res.ok) throw new Error(res.statusText);
         const text = await res.text();
         const content = document.getElementById('markdown-content');
         const scrollTop = content ? content.parentElement.scrollTop : 0;
         document.getElementById('drop-zone').classList.add('hidden');
         document.getElementById('viewer-container').style.display = 'flex';
-        document.getElementById('file-name').textContent = fileName;
+        const nameEl = document.getElementById('file-name');
+        nameEl.textContent = fileName;
+        nameEl.title = filePath;
+        nameEl.style.cursor = 'pointer';
+        nameEl.onclick = function() {
+          showingFullPath = !showingFullPath;
+          nameEl.textContent = showingFullPath ? filePath : fileName;
+        };
         await displayMarkdown(text);
         lastModified = Date.now();
         updateLastModified();
@@ -129,7 +138,7 @@ function getFileViewerHtml() {
         }
       };
 
-      const evtSource = new EventSource('/api/events');
+      const evtSource = new EventSource('/api/events?path=' + encodedPath);
       evtSource.onmessage = async function(event) {
         if (event.data === 'reload') {
           try { await serverLoad(); showStatus('Auto-refreshed', 1500); }
@@ -139,80 +148,100 @@ function getFileViewerHtml() {
     })();
     </script>`;
 
-  return injectScript(html, script);
+  const lastIndex = html.lastIndexOf("</body>");
+  html = html.slice(0, lastIndex) + script + "\n" + html.slice(lastIndex);
+  return html;
 }
 
-function getLandingHtml() {
+// ── Session viewer HTML (drag-and-drop, no live reload) ─────────────
+
+function getSessionViewerHtml(fileName) {
   const viewerPath = join(__dirname, "markdown-viewer.html");
   let html = readFileSync(viewerPath, "utf-8");
 
   const script = `
     <script>
-    // Landing page: persist loaded file in localStorage so Safari refresh works
+    // Session mode: restore from sessionStorage, no live reload
     (function() {
-      const origDisplay = window.displayMarkdown;
-      window.displayMarkdown = async function(text) {
-        localStorage.setItem('mdview-content', text);
-        return origDisplay(text);
-      };
+      const fileName = ${JSON.stringify(fileName)};
 
-      const origLoadFile = window.loadFile;
-      window.loadFile = async function(file, isAutoRefresh) {
-        localStorage.setItem('mdview-name', file.name);
-        return origLoadFile(file, isAutoRefresh);
-      };
-
-      // On page load, restore last file from localStorage
       window.addEventListener('DOMContentLoaded', async function() {
-        const stored = localStorage.getItem('mdview-content');
-        const name = localStorage.getItem('mdview-name');
-        if (stored) {
-          await new Promise(r => setTimeout(r, 50));
-          document.getElementById('drop-zone').classList.add('hidden');
-          document.getElementById('viewer-container').style.display = 'flex';
-          if (name) document.getElementById('file-name').textContent = name;
-          await displayMarkdown(stored);
-          lastModified = Date.now();
-          updateLastModified();
+        await new Promise(r => setTimeout(r, 50));
+        const content = sessionStorage.getItem('mdview-content');
+        if (!content) {
+          document.getElementById('file-name').textContent = 'File not found in session';
+          return;
         }
+        document.getElementById('drop-zone').classList.add('hidden');
+        document.getElementById('viewer-container').style.display = 'flex';
+        document.getElementById('file-name').textContent = fileName;
+        await displayMarkdown(content);
+        lastModified = Date.now();
+        updateLastModified();
       });
 
       window.refreshContent = async function() {
-        const stored = localStorage.getItem('mdview-content');
-        if (stored) {
-          await displayMarkdown(stored);
-          showStatus('Refreshed', 1500);
-        } else {
-          showStatus('No file loaded', 2000);
+        const content = sessionStorage.getItem('mdview-content');
+        if (content) {
+          await displayMarkdown(content);
+          showStatus('Refreshed from session', 1500);
         }
       };
     })();
     </script>`;
 
-  return injectScript(html, script);
+  const lastIndex = html.lastIndexOf("</body>");
+  html = html.slice(0, lastIndex) + script + "\n" + html.slice(lastIndex);
+  return html;
 }
 
-// ── HTTP server ──────────────────────────────────────────────────────
+// ── HTTP server ─────────────────────────────────────────────────────
 
-const fileDir = dirname(filePath);
+const mimeTypes = {
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+  ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
+  ".ico": "image/x-icon", ".css": "text/css", ".js": "application/javascript",
+};
 
 const server = createServer((req, res) => {
-  // Landing page (homepage)
-  if (req.url === "/" || req.url === "/index.html") {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+
+  // Homepage — always the picker
+  if (url.pathname === "/" || url.pathname === "/index.html") {
+    const viewerPath = join(__dirname, "markdown-viewer.html");
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(getLandingHtml());
+    res.end(readFileSync(viewerPath, "utf-8"));
     return;
   }
 
-  // File viewer (auto-load, refresh, SSE)
-  if (req.url.startsWith("/?file=")) {
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(getFileViewerHtml());
+  // Viewer — file loaded with live reload (path) or sessionStorage (name)
+  if (url.pathname === "/view") {
+    const filePath = url.searchParams.get("path");
+    const fileName = url.searchParams.get("name");
+
+    if (filePath && existsSync(filePath)) {
+      // Server-backed viewer with live reload
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(getViewerHtml(filePath));
+    } else if (fileName) {
+      // sessionStorage-backed viewer (drag-and-drop, no live reload)
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(getSessionViewerHtml(fileName));
+    } else {
+      res.writeHead(302, { Location: "/" });
+      res.end();
+    }
     return;
   }
 
-  // API: read the watched file
-  if (req.url === "/api/file") {
+  // API: read a specific file
+  if (url.pathname === "/api/file") {
+    const filePath = url.searchParams.get("path");
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("File not found");
+      return;
+    }
     try {
       const content = readFileSync(filePath, "utf-8");
       res.writeHead(200, { "Content-Type": "text/plain", "Cache-Control": "no-cache" });
@@ -224,31 +253,42 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // API: SSE events
-  if (req.url === "/api/events") {
+  // API: SSE events for a specific file
+  if (url.pathname === "/api/events") {
+    const filePath = url.searchParams.get("path");
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("File not found");
+      return;
+    }
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
     });
     res.write(`data: connected\n\n`);
-    sseClients.add(res);
-    req.on("close", () => { sseClients.delete(res); });
+    addClient(filePath, res);
+    req.on("close", () => { removeClient(filePath, res); });
     return;
   }
 
-  // Serve static files (images) relative to the markdown file's directory
-  const requestedPath = resolve(fileDir, req.url.slice(1));
-  if (requestedPath.startsWith(fileDir) && existsSync(requestedPath) && statSync(requestedPath).isFile()) {
-    const ext = extname(requestedPath).toLowerCase();
-    const mimeTypes = {
-      ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-      ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
-      ".ico": "image/x-icon", ".css": "text/css", ".js": "application/javascript",
-    };
-    res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
-    res.end(readFileSync(requestedPath));
-    return;
+  // Serve static files relative to a viewed file's directory
+  const referer = req.headers.referer;
+  if (referer) {
+    try {
+      const refUrl = new URL(referer);
+      const refPath = refUrl.searchParams.get("path");
+      if (refPath) {
+        const fileDir = dirname(refPath);
+        const requestedPath = resolve(fileDir, url.pathname.slice(1));
+        if (requestedPath.startsWith(fileDir) && existsSync(requestedPath) && statSync(requestedPath).isFile()) {
+          const ext = extname(requestedPath).toLowerCase();
+          res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
+          res.end(readFileSync(requestedPath));
+          return;
+        }
+      }
+    } catch {}
   }
 
   res.writeHead(404, { "Content-Type": "text/plain" });
@@ -258,19 +298,16 @@ const server = createServer((req, res) => {
 // ── Start ────────────────────────────────────────────────────────────
 
 server.listen(port, "127.0.0.1", () => {
-  const fileUrl = `http://127.0.0.1:${port}/?file=${encodeURIComponent(filePath)}`;
-  console.log(`Markdown viewer: http://127.0.0.1:${port}`);
-  console.log(`Watching: ${filePath}`);
+  const url = `http://127.0.0.1:${port}`;
+  console.log(`mdview: ${url}`);
   console.log(`Press Ctrl+C to stop.\n`);
 
-  startWatching();
-
   const openCmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} "${fileUrl}"`);
+  exec(`${openCmd} "${url}"`);
 });
 
 process.on("SIGINT", () => {
-  unwatchFile(filePath);
+  for (const [path] of watchers) { unwatchFile(path); }
   server.close();
   process.exit(0);
 });
