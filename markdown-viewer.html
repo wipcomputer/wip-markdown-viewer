@@ -55,7 +55,13 @@
             background: var(--bg-secondary);
             height: 100vh;
             overflow: hidden;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+            }
         }
 
         #drop-zone {
@@ -67,8 +73,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f6f5f3;
-            transition: all 0.3s ease;
+            background: var(--bg-secondary);
+            transition: all 0.2s ease;
             z-index: 1000;
         }
 
@@ -77,16 +83,16 @@
         }
 
         #drop-zone.dragover {
-            background: #edecea;
+            background: var(--border-color);
         }
 
         #drop-zone.dragover .drop-border {
-            border-color: #222;
+            border-color: var(--text-primary);
         }
 
         .drop-message {
             text-align: center;
-            color: #222;
+            color: var(--text-primary);
             pointer-events: none;
             max-width: 440px;
         }
@@ -96,22 +102,22 @@
             font-weight: 600;
             letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: #999;
+            color: var(--text-secondary);
             margin-bottom: 16px;
         }
 
         .drop-message h1 {
-            font-size: 2.8em;
+            font-size: clamp(2em, 5vw, 2.8em);
             margin-bottom: 8px;
             font-weight: 700;
             letter-spacing: -0.03em;
-            color: #222;
+            color: var(--text-heading);
             line-height: 1.1;
         }
 
         .drop-message .tagline {
             font-size: 1.05em;
-            color: #888;
+            color: var(--text-secondary);
             margin-bottom: 48px;
             line-height: 1.6;
             font-weight: 400;
@@ -119,26 +125,20 @@
 
         .drop-border {
             pointer-events: auto;
-            border: 1.5px dashed #ccc;
-            border-radius: 12px;
-            padding: 44px 40px;
-            transition: border-color 0.3s ease;
+            border: 1.5px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 48px 40px;
+            transition: border-color 0.2s ease;
         }
 
         .drop-border:hover {
-            border-color: #aaa;
-        }
-
-        .drop-icon {
-            font-size: 1.6em;
-            margin-bottom: 16px;
-            color: #bbb;
+            border-color: var(--text-secondary);
         }
 
         .drop-message button {
             pointer-events: auto;
-            background: #222;
-            color: #fff;
+            background: var(--text-primary);
+            color: var(--bg-primary);
             border: none;
             padding: 12px 32px;
             border-radius: 8px;
@@ -149,9 +149,8 @@
         }
 
         .drop-message button:hover {
-            background: #000;
+            background: var(--text-heading);
             transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
         }
 
         .drop-message button:active {
@@ -160,7 +159,7 @@
 
         .drop-hint {
             font-size: 0.8em;
-            color: #aaa;
+            color: var(--text-secondary);
             margin-top: 16px;
             font-weight: 400;
         }
@@ -227,9 +226,9 @@
             flex: 1;
             overflow-y: auto;
             background: var(--bg-primary);
-            padding: 40px;
+            padding: 48px;
             display: flex;
-            gap: 20px;
+            gap: 32px;
         }
 
         #toc-sidebar {
@@ -294,38 +293,45 @@
 
         /* Markdown Styling */
         #markdown-content h1 {
-            font-size: 2.5em;
-            margin: 30px 0 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
+            font-size: clamp(1.8em, 4vw, 2.5em);
+            margin: 32px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
             color: var(--text-heading);
+            letter-spacing: -0.02em;
+            font-weight: 700;
         }
 
         #markdown-content h2 {
-            font-size: 2em;
-            margin: 25px 0 15px;
+            font-size: clamp(1.4em, 3vw, 2em);
+            margin: 32px 0 16px;
             color: var(--text-heading);
+            letter-spacing: -0.02em;
+            font-weight: 600;
         }
 
         #markdown-content h3 {
             font-size: 1.5em;
-            margin: 20px 0 10px;
+            margin: 24px 0 12px;
             color: var(--text-heading);
+            letter-spacing: -0.01em;
+            font-weight: 600;
         }
 
         #markdown-content h4, #markdown-content h5, #markdown-content h6 {
-            margin: 15px 0 10px;
+            margin: 20px 0 8px;
             color: var(--text-heading);
+            font-weight: 600;
         }
 
         #markdown-content p {
-            margin: 15px 0;
+            margin: 16px 0;
             line-height: 1.7;
         }
 
         #markdown-content ul, #markdown-content ol {
-            margin: 15px 0;
-            padding-left: 30px;
+            margin: 16px 0;
+            padding-left: 32px;
         }
 
         #markdown-content li {
@@ -345,10 +351,10 @@
         #markdown-content pre {
             background: var(--bg-code);
             border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 20px;
             overflow-x: auto;
-            margin: 20px 0;
+            margin: 24px 0;
         }
 
         #markdown-content pre code {
@@ -357,9 +363,9 @@
         }
 
         #markdown-content blockquote {
-            border-left: 4px solid var(--accent-color);
+            border-left: 3px solid var(--border-color);
             padding-left: 20px;
-            margin: 20px 0;
+            margin: 24px 0;
             color: var(--text-secondary);
             font-style: italic;
         }
