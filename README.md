@@ -1,59 +1,56 @@
 # WIP Computer — Live MD Viewer
 
-A real-time markdown viewer that auto-updates in the browser when an AI or editor saves to disk. Drop a file or pick one — changes appear instantly with no refresh needed.
+See your markdown update in real time as you and your AI edit together.
 
-## Features
+Open a README, a project doc, or any `.md` file in the viewer — then keep working on it in your editor or with an AI agent like Claude Code, Cursor, or Copilot. Every save hits the browser instantly. No refresh, no rebuild, no waiting.
 
-- **Syntax Highlighting**: 180+ languages supported via highlight.js
-- **Dark Mode**: toggle between light and dark themes
-- **Table of Contents**: auto-generated navigation for long documents
-- **GitHub Flavored Markdown**: tables, task lists, and strikethrough
-- **Mermaid Diagrams**: flowcharts, sequence diagrams, and more
-- **Math Equations**: KaTeX rendering for LaTeX expressions
-- **Live Reload**: auto-refreshes via SSE when the file changes on disk
-- **Multi-file**: open multiple tabs, each watching a different file
-- **Print Support**: print-optimized layouts
+## Why
 
-## Usage
+You're writing a README with Claude Code. Or pair-editing a design doc with Cursor. Or reviewing changes an agent just made to your project docs. You want to *see* the markdown rendered — live — as it's being written.
 
-### Start the server
+That's what this does. Start the server, open your file, and watch it update as the AI works.
+
+## Quick Start
 
 ```bash
 node server.js
 ```
 
-Opens http://127.0.0.1:3000/ — pick a file from the homepage or drag and drop. The file renders with live reload via SSE. Open multiple tabs to watch multiple files at once.
+Opens http://127.0.0.1:3000/. Pick a file or drag one in. Done.
+
+## How It Works
+
+1. Open a `.md` file in the viewer
+2. The server watches the file on disk (500ms polling)
+3. When the file changes — you saved, your AI saved, anything saved — the server pushes an update via SSE
+4. The browser re-renders instantly, preserving your scroll position
+
+Open multiple tabs to watch multiple files at the same time.
+
+## Features
+
+- **Live reload** — SSE-powered, works in all browsers including Safari
+- **Multi-file** — each tab watches its own file independently
+- **GitHub Flavored Markdown** — tables, task lists, strikethrough
+- **Syntax highlighting** — 180+ languages via highlight.js
+- **Dark mode** — light and dark themes
+- **Table of contents** — auto-generated from headings
+- **Mermaid diagrams** — flowcharts, sequence diagrams, and more
+- **Math equations** — KaTeX rendering for LaTeX
+- **Drag and drop** — works without the server too (no live reload)
+
+## Options
 
 ```bash
-node server.js --port 8080    # Custom port
+node server.js --port 8080    # Custom port (default: 3000)
 ```
 
-### Static HTML (no install)
+## Use Cases
 
-Open `markdown-viewer.html` directly in your browser:
-
-1. Open `markdown-viewer.html` in any browser
-2. Drag and drop a `.md` file, or click "Load File"
-3. Auto-refresh only works in Chrome/Edge (File System Access API). Safari/Firefox need manual refresh.
-
-### BBEdit Preview Template
-
-For BBEdit users with true auto-refresh on save:
-
-1. In Finder, press `Shift+Cmd+G` and paste: `~/Library/Application Support/BBEdit/Preview Templates/`
-2. Copy `bbedit-preview-template.html` to this folder
-3. In BBEdit, open any `.md` file and press `Ctrl+Cmd+P`
-4. Select `bbedit-preview-template.html` from the Templates menu
-
-## Demo
-
-Load `demo/demo.md` to see all features in action.
-
-![Landing Page](images/01.png)
-
-![Light Mode View](images/02.png)
-
-![Dark Mode View](images/03.png)
+- **AI pair editing** — watch your README render live while Claude Code, Cursor, or Copilot edits it
+- **Documentation review** — open a doc an agent just updated and see exactly what changed
+- **Writing** — draft markdown with instant visual feedback
+- **Presentations** — live-edit slides or docs while sharing your screen
 
 ## License
 
@@ -61,4 +58,4 @@ MIT
 
 ---
 
-Built collaboratively by Parker Todd Brooks, Lēsa (OpenClaw agent), and Claude Code (CLI).
+Built by Parker Todd Brooks, with Claude Code.
