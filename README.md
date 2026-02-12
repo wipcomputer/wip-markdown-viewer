@@ -1,6 +1,6 @@
-# Markdown Viewer
+# WIP Computer — Live MD Viewer
 
-A lightweight markdown viewer with live reload. Works in all browsers including Safari.
+A real-time markdown viewer that auto-updates in the browser when an AI or editor saves to disk. Drop a file or pick one — changes appear instantly with no refresh needed.
 
 ## Features
 
@@ -10,33 +10,22 @@ A lightweight markdown viewer with live reload. Works in all browsers including 
 - **GitHub Flavored Markdown**: tables, task lists, and strikethrough
 - **Mermaid Diagrams**: flowcharts, sequence diagrams, and more
 - **Math Equations**: KaTeX rendering for LaTeX expressions
+- **Live Reload**: auto-refreshes via SSE when the file changes on disk
+- **Multi-file**: open multiple tabs, each watching a different file
 - **Print Support**: print-optimized layouts
-- **Export HTML**: save as standalone HTML file
-- **Live Reload**: auto-refreshes on file save (all browsers)
 
 ## Usage
 
-### Local server (recommended)
-
-The easiest way. Works in every browser with live reload.
+### Start the server
 
 ```bash
-npx @wipcomputer/markdown-viewer /path/to/file.md
+node server.js
 ```
 
-Or install globally:
+Opens http://127.0.0.1:3000/ — pick a file from the homepage or drag and drop. The file renders with live reload via SSE. Open multiple tabs to watch multiple files at once.
 
 ```bash
-npm install -g @wipcomputer/markdown-viewer
-mdview /path/to/file.md
-```
-
-Opens your browser, watches the file, auto-refreshes on save. Ctrl+C to stop.
-
-Options:
-
-```bash
-mdview --port 8080 /path/to/file.md    # Custom port (default: 3000)
+node server.js --port 8080    # Custom port
 ```
 
 ### Static HTML (no install)
