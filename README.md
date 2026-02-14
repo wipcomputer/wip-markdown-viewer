@@ -3,7 +3,9 @@
 
 See your documents update in real time as you and your AI edit them together.
 
-## Get Started
+## Quick Start
+
+### For AI Agents
 
 Open your AI coding tool and say:
 
@@ -13,6 +15,21 @@ start the server, and add live viewer support to this project.
 ```
 
 Your AI will clone the repo, start the server, and add the right instructions to your project so it knows to open the viewer whenever you edit markdown together. That's it.
+
+### For Devs
+
+```bash
+git clone https://github.com/wipcomputer/wip-markdown-viewer.git
+cd wip-markdown-viewer
+npm install
+node server.js
+```
+
+Server starts at `http://127.0.0.1:3000`. Open any markdown file:
+
+```
+http://127.0.0.1:3000/view?path=/absolute/path/to/your/file.md
+```
 
 ## How It Works
 
@@ -49,16 +66,6 @@ If your tool reads a project-level instruction file... it works. The snippet is 
 - **Mermaid diagrams:** flowcharts, sequence diagrams, and more
 - **Math equations:** KaTeX rendering for LaTeX
 
-## License
-
-MIT
-
----
-
-Built by Parker Todd Brooks, with Claude Code and Lesa (OpenClaw).
-
----
-
 ## For AI Agents
 
 Everything below is for you, the AI agent. The human doesn't need to read this. When the user asks you to set up the live markdown viewer, follow these steps.
@@ -68,10 +75,10 @@ Everything below is for you, the AI agent. The human doesn't need to read this. 
 The viewer repo should be cloned somewhere on the machine. After cloning, resolve the full path and start the server:
 
 ```bash
-node {absolute path to wip-markdown-viewer}/server.js &
+curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || node {absolute path to wip-markdown-viewer}/server.js &
 ```
 
-Use the real path, not a placeholder. The server runs at `http://127.0.0.1:3000` and stays running in the background.
+Use the real path, not a placeholder. The server runs at `http://127.0.0.1:3000` and stays running in the background. Note: the server doesn't survive reboots or long idle periods. The check above starts it only if it's not already running.
 
 ### Step 2. Add the Snippet to Your Project
 
@@ -80,11 +87,9 @@ Add the following to whatever instruction file your tool uses (`CLAUDE.md`, `AGE
 ```markdown
 ## Live Markdown Viewer
 
-A live viewer server is running at http://127.0.0.1:3000.
+When editing a .md file, check the server is running and open it in the viewer:
 
-When editing a .md file, open it in the live viewer first so the user can see
-your changes in real time:
-
+  curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || node {path to server.js} &
   open "http://127.0.0.1:3000/view?path={absolute path to the file}"
 
 Then make your edits. The user sees every change as you write. No refresh needed.
@@ -105,3 +110,11 @@ That's it. The server watches the file and pushes updates via SSE. You don't nee
 - Each file gets its own URL. Multiple files can be viewed in separate tabs.
 - The server reads the file fresh on every change. No caching.
 - If the server isn't running, start it. It doesn't need any arguments.
+
+---
+
+## License
+
+MIT
+
+Built by Parker Todd Brooks, with Claude Code and Lēsa (OpenClaw).
