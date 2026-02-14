@@ -1,7 +1,7 @@
 ###### WIP Computer
 # Live .md Viewer
 
-See your documents update in real time as you and your AI edit them together. Ask your AI to start editing a markdown file in .md viewer.
+See your documents update in real time as you and your AI edit them together. Ask your AI to start editing a markdown file in '.md viewer'.
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ http://127.0.0.1:3000/view?path=/absolute/path/to/your/file.md
 
 ## How It Works
 
-1. Ask your AI to start editing a markdown file in .md viewer
+1. Ask your AI to start editing a markdown file in '.md viewer'
 2. Your AI opens it in your browser via the viewer
 3. The server watches the file on disk
 4. Every save re-renders the page instantly. No refresh needed.
