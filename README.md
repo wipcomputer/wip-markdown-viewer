@@ -1,7 +1,7 @@
 ###### WIP Computer
 # Live .md Viewer
 
-See your documents update in real time as you and your AI edit them together. Ask your AI to start editing a markdown file in '.md viewer'.
+See your documents update in real time as you and your AI edit them together.
 
 ## Quick Start
 
