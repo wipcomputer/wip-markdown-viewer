@@ -1,6 +1,6 @@
 ---
 name: markdown-viewer
-description: See your .md docs update in real time as you and your AI edit them together. Works in all browsers including Safari.
+description: Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.
 homepage: https://github.com/wipcomputer/wip-markdown-viewer
 metadata:
   {

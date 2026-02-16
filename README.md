@@ -1,7 +1,7 @@
 ###### WIP Computer
 # Live .md Viewer
 
-See your .md docs update in real time as you and your AI edit them together.
+Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.
 
 ## How It Works
 
