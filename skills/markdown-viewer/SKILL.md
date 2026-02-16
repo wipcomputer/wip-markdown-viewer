@@ -27,6 +27,9 @@ metadata:
 
 Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.
 
+GitHub: [wipcomputer/wip-markdown-viewer](https://github.com/wipcomputer/wip-markdown-viewer)
+npm: [@wipcomputer/markdown-viewer](https://www.npmjs.com/package/@wipcomputer/markdown-viewer)
+
 ## Install
 
 ```bash
@@ -34,8 +37,6 @@ npm install -g @wipcomputer/markdown-viewer
 ```
 
 This installs the `mdview` command globally. Zero runtime dependencies. Pure Node.js.
-
-Source: [github.com/wipcomputer/wip-markdown-viewer](https://github.com/wipcomputer/wip-markdown-viewer)
 
 ## Quick start
 
