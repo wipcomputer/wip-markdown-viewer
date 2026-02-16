@@ -1,7 +1,7 @@
 {
   "name": "@wipcomputer/markdown-viewer",
   "version": "1.0.2",
-  "description": "Simple markdown viewer with live reload. Works in all browsers including Safari.",
+  "description": "See your documents update in real time as you and your AI edit them together. Works in all browsers including Safari.",
   "type": "module",
   "main": "server.js",
   "bin": {

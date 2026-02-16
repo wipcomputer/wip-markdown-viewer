@@ -1,6 +1,6 @@
 ---
 name: markdown-viewer
-description: Live markdown viewer with SSE reload. Works in all browsers including Safari. Zero dependencies.
+description: See your documents update in real time as you and your AI edit them together. Works in all browsers including Safari.
 homepage: https://github.com/wipcomputer/wip-markdown-viewer
 metadata:
   {
