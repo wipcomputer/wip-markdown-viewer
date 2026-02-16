@@ -3,12 +3,20 @@
   "version": "1.0.0",
   "description": "Simple markdown viewer with live reload. Works in all browsers including Safari.",
   "type": "module",
+  "main": "server.js",
   "bin": {
     "mdview": "./server.js"
   },
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["markdown", "viewer", "live-reload", "safari"],
-  "license": "MIT"
+  "keywords": ["markdown", "viewer", "live-reload", "safari", "ai-agents", "claude-code"],
+  "author": "Parker Todd Brooks",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wipcomputer/wip-markdown-viewer.git"
+  },
+  "homepage": "https://github.com/wipcomputer/wip-markdown-viewer#readme",
+  "bugs": "https://github.com/wipcomputer/wip-markdown-viewer/issues"
 }

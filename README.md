@@ -3,20 +3,38 @@
 
 See your documents update in real time as you and your AI edit them together.
 
-## Quick Start
+## How It Works
+
+1. Tell your AI coding tool to install `@wipcomputer/markdown-viewer` globally
+2. Tell your AI to open the demo.md (or any .md) in md view
+3. AI will open the file in your default browser
+4. Every save re-renders the page instantly. No refresh needed.
+
+Open multiple tabs to work on multiple documents at once.
+
+## Install
 
 ### For AI Agents
 
 Open your AI coding tool and say:
 
 ```
-Clone https://github.com/wipcomputer/wip-markdown-viewer,
-start the server, and add live viewer support to this project.
+Install @wipcomputer/markdown-viewer globally,
+start mdview, and add live viewer support to this project.
 ```
 
-Your AI will clone the repo, start the server, and add the right instructions to your project so it knows to open the viewer whenever you edit markdown together. That's it.
+Your AI will install the package, start the server, and add the right instructions to your project so it knows to open the viewer whenever you edit markdown together. That's it.
 
-### For Devs
+### npm
+
+```bash
+npm install -g @wipcomputer/markdown-viewer
+mdview
+```
+
+That's it. Global install gives you the `mdview` command anywhere.
+
+### From source
 
 ```bash
 git clone https://github.com/wipcomputer/wip-markdown-viewer.git
@@ -31,14 +49,6 @@ Server starts at `http://127.0.0.1:3000`. Open any markdown file:
 http://127.0.0.1:3000/view?path=/absolute/path/to/your/file.md
 ```
 
-## How It Works
-
-1. Ask your AI to start editing a markdown file in '.md viewer'
-2. Your AI opens it in your browser via the viewer
-3. The server watches the file on disk
-4. Every save re-renders the page instantly. No refresh needed.
-
-Open multiple tabs to work on multiple documents at once.
 
 ## Supported Tools
 
@@ -72,13 +82,19 @@ Everything below is for you, the AI agent. The human doesn't need to read this. 
 
 ### Step 1. Start the Server
 
-The viewer repo should be cloned somewhere on the machine. After cloning, resolve the full path and start the server:
+If installed globally via npm (`npm install -g @wipcomputer/markdown-viewer`):
+
+```bash
+curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || mdview &
+```
+
+Or if cloned from source, resolve the full path and start the server:
 
 ```bash
 curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || node {absolute path to wip-markdown-viewer}/server.js &
 ```
 
-Use the real path, not a placeholder. The server runs at `http://127.0.0.1:3000` and stays running in the background. Note: the server doesn't survive reboots or long idle periods. The check above starts it only if it's not already running.
+The server runs at `http://127.0.0.1:3000` and stays running in the background. Note: the server doesn't survive reboots or long idle periods. The check above starts it only if it's not already running.
 
 ### Step 2. Add the Snippet to Your Project
 
