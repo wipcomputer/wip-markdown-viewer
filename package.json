@@ -1,16 +1,23 @@
 {
   "name": "@wipcomputer/markdown-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple markdown viewer with live reload. Works in all browsers including Safari.",
   "type": "module",
   "main": "server.js",
   "bin": {
-    "mdview": "./server.js"
+    "mdview": "server.js"
   },
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["markdown", "viewer", "live-reload", "safari", "ai-agents", "claude-code"],
+  "keywords": [
+    "markdown",
+    "viewer",
+    "live-reload",
+    "safari",
+    "ai-agents",
+    "claude-code"
+  ],
   "author": "Parker Todd Brooks",
   "license": "MIT",
   "repository": {
