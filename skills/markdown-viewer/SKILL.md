@@ -7,7 +7,7 @@ metadata:
     "openclaw":
       {
         "emoji": "📝",
-        "requires": { "bins": ["node"] },
+        "requires": { "bins": ["node", "curl"] },
         "install":
           [
             {
@@ -25,20 +25,37 @@ metadata:
 
 # Live Markdown Viewer
 
-See your documents update in real time as your AI edits them.
+Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.
+
+## Install
+
+```bash
+npm install -g @wipcomputer/markdown-viewer
+```
+
+This installs the `mdview` command globally. Zero runtime dependencies. Pure Node.js.
+
+Source: [github.com/wipcomputer/wip-markdown-viewer](https://github.com/wipcomputer/wip-markdown-viewer)
 
 ## Quick start
 
-Start the server:
+Start the server (binds to 127.0.0.1 only, never exposed to the network):
 
 ```bash
 curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || mdview &
 ```
 
-Open a file:
+Open a file in your default browser:
 
 ```bash
+# macOS
 open "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
+
+# Linux
+xdg-open "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
+
+# Windows
+start "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
 ```
 
 ## How it works
@@ -49,6 +66,12 @@ open "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
 4. Every save re-renders the page instantly. No refresh needed.
 
 Open multiple tabs to work on multiple documents at once.
+
+## Security
+
+- Server binds to `127.0.0.1` only. It is not accessible from other machines.
+- The `/view?path=` parameter reads files from your local filesystem. This is expected behavior for a local viewer. Do not expose the port to untrusted networks.
+- Zero npm dependencies. No supply chain risk beyond Node.js itself.
 
 ## Features
 
@@ -63,6 +86,5 @@ Open multiple tabs to work on multiple documents at once.
 
 ## Notes
 
-- The `open` command works on macOS. On Linux use `xdg-open`. On Windows use `start`.
 - Server runs at `http://127.0.0.1:3000` by default. Use `mdview --port 8080` to change.
-- Zero npm dependencies. Pure Node.js.
+- The server does not survive reboots. The curl check in quick start restarts it if needed.
