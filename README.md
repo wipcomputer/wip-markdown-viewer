@@ -1,7 +1,7 @@
 ###### WIP Computer
 # Live .md Viewer
 
-See your documents update in real time as you and your AI edit them together.
+See your .md docs update in real time as you and your AI edit them together.
 
 ## How It Works
 

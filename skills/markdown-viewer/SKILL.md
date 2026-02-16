@@ -1,6 +1,6 @@
 ---
 name: markdown-viewer
-description: See your documents update in real time as you and your AI edit them together. Works in all browsers including Safari.
+description: See your .md docs update in real time as you and your AI edit them together. Works in all browsers including Safari.
 homepage: https://github.com/wipcomputer/wip-markdown-viewer
 metadata:
   {
