@@ -129,6 +129,19 @@ That's it. The server watches the file and pushes updates via SSE. You don't nee
 
 ---
 
+## Security
+
+- Server binds to `127.0.0.1` only. It is not accessible from other machines.
+- The `/view?path=` parameter reads files from your local filesystem. Use `--root` to restrict access to a specific directory tree:
+
+```bash
+mdview --root /path/to/your/project
+```
+
+When `--root` is set, the server will only serve files under that directory. Requests for files outside it return 404. Recommended when running in shared or multi-user environments.
+
+---
+
 ## License
 
 MIT

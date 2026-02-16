@@ -5,6 +5,7 @@
 // Usage:
 //   mdview                         Start server, open homepage
 //   mdview --port 8080             Use custom port
+//   mdview --root /path/to/dir     Restrict file access to this directory
 //
 // Opens browser to http://127.0.0.1:3000/ — pick files, view with live reload.
 
@@ -20,11 +21,15 @@ const __dirname = dirname(__filename);
 // ── Parse args ───────────────────────────────────────────────────────
 
 let port = 3000;
+let rootDir = null;
 
 const args = process.argv.slice(2);
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--port" && args[i + 1]) {
     port = parseInt(args[i + 1], 10);
+    i++;
+  } else if (args[i] === "--root" && args[i + 1]) {
+    rootDir = resolve(args[i + 1]);
     i++;
   } else if (args[i] === "--help" || args[i] === "-h") {
     console.log(`mdview: live markdown viewer
@@ -32,11 +37,27 @@ for (let i = 0; i < args.length; i++) {
 Usage:
   mdview                         Start server, open homepage
   mdview --port 8080             Use custom port
+  mdview --root /path/to/dir     Restrict file access to this directory
+
+Options:
+  --root <dir>   Only serve files under this directory. Prevents access
+                 to files outside the specified path. Recommended for
+                 shared or multi-user environments.
 
 Opens browser to http://127.0.0.1:PORT/ — pick files, view with live reload.
 Works in all browsers (Safari, Chrome, Firefox).`);
     process.exit(0);
   }
+}
+
+// Validate that a file path is allowed. Returns the resolved path or null.
+function validateFilePath(filePath) {
+  if (!filePath) return null;
+  const resolved = resolve(filePath);
+  if (rootDir && !resolved.startsWith(rootDir + "/") && resolved !== rootDir) {
+    return null;
+  }
+  return resolved;
 }
 
 // ── Multi-file watcher ──────────────────────────────────────────────
@@ -224,7 +245,7 @@ const server = createServer((req, res) => {
 
   // Viewer — file loaded with live reload (path) or sessionStorage (name)
   if (url.pathname === "/view") {
-    const filePath = url.searchParams.get("path");
+    const filePath = validateFilePath(url.searchParams.get("path"));
     const fileName = url.searchParams.get("name");
 
     if (filePath && existsSync(filePath)) {
@@ -244,7 +265,7 @@ const server = createServer((req, res) => {
 
   // API: read a specific file
   if (url.pathname === "/api/file") {
-    const filePath = url.searchParams.get("path");
+    const filePath = validateFilePath(url.searchParams.get("path"));
     if (!filePath || !existsSync(filePath)) {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("File not found");
@@ -263,7 +284,7 @@ const server = createServer((req, res) => {
 
   // API: SSE events for a specific file
   if (url.pathname === "/api/events") {
-    const filePath = url.searchParams.get("path");
+    const filePath = validateFilePath(url.searchParams.get("path"));
     if (!filePath || !existsSync(filePath)) {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("File not found");
@@ -289,7 +310,8 @@ const server = createServer((req, res) => {
       if (refPath) {
         const fileDir = dirname(refPath);
         const requestedPath = resolve(fileDir, url.pathname.slice(1));
-        if (requestedPath.startsWith(fileDir) && existsSync(requestedPath) && statSync(requestedPath).isFile()) {
+        const validatedStatic = validateFilePath(requestedPath);
+        if (validatedStatic && requestedPath.startsWith(fileDir) && existsSync(requestedPath) && statSync(requestedPath).isFile()) {
           const ext = extname(requestedPath).toLowerCase();
           res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
           res.end(readFileSync(requestedPath));
@@ -308,6 +330,7 @@ const server = createServer((req, res) => {
 server.listen(port, "127.0.0.1", () => {
   const url = `http://127.0.0.1:${port}`;
   console.log(`mdview: ${url}`);
+  if (rootDir) console.log(`root: ${rootDir} (file access restricted)`);
   console.log(`Press Ctrl+C to stop.\n`);
 
   const openCmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";

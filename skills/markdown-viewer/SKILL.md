@@ -71,7 +71,7 @@ Open multiple tabs to work on multiple documents at once.
 ## Security
 
 - Server binds to `127.0.0.1` only. It is not accessible from other machines.
-- The `/view?path=` parameter reads files from your local filesystem. This is expected behavior for a local viewer. Do not expose the port to untrusted networks.
+- The `/view?path=` parameter reads files from your local filesystem. Use `--root <dir>` to restrict access to a specific directory tree. Recommended for shared environments.
 - Zero npm dependencies. No supply chain risk beyond Node.js itself.
 
 ## Features
