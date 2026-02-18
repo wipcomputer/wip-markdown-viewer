@@ -230,6 +230,7 @@ const mimeTypes = {
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
   ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
   ".ico": "image/x-icon", ".css": "text/css", ".js": "application/javascript",
+  ".woff": "font/woff", ".woff2": "font/woff2", ".ttf": "font/ttf",
 };
 
 const server = createServer((req, res) => {
@@ -299,6 +300,17 @@ const server = createServer((req, res) => {
     addClient(filePath, res);
     req.on("close", () => { removeClient(filePath, res); });
     return;
+  }
+
+  // Serve bundled vendor files (no CDN dependency)
+  if (url.pathname.startsWith("/vendor/")) {
+    const vendorPath = join(__dirname, url.pathname);
+    if (existsSync(vendorPath) && statSync(vendorPath).isFile()) {
+      const ext = extname(vendorPath).toLowerCase();
+      res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
+      res.end(readFileSync(vendorPath));
+      return;
+    }
   }
 
   // Serve static files relative to a viewed file's directory
