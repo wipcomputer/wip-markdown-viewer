@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WIP Computer: Live .md Viewer</title>
-    <!-- Markdown parser -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Syntax highlighting -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" id="highlight-theme">
-    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-    <!-- Mermaid for diagrams -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <!-- KaTeX for math -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Markdown parser (bundled, no CDN) -->
+    <script src="/vendor/marked.min.js"></script>
+    <!-- Syntax highlighting (bundled, no CDN) -->
+    <link rel="stylesheet" href="/vendor/github.min.css" id="highlight-theme">
+    <script src="/vendor/highlight.min.js"></script>
+    <!-- Mermaid for diagrams (bundled, no CDN) -->
+    <script src="/vendor/mermaid.min.js"></script>
+    <!-- KaTeX for math (bundled, no CDN) -->
+    <link rel="stylesheet" href="/vendor/katex.min.css">
+    <script src="/vendor/katex.min.js"></script>
+    <script src="/vendor/auto-render.min.js"></script>
     <style>
         :root {
             --bg-primary: #fcfbf9;
@@ -1312,10 +1312,10 @@
             // Update highlight.js theme
             const highlightTheme = document.getElementById('highlight-theme');
             if (newTheme === 'dark') {
-                highlightTheme.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
+                highlightTheme.href = '/vendor/github-dark.min.css';
                 mermaid.initialize({ theme: 'dark' });
             } else {
-                highlightTheme.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css';
+                highlightTheme.href = '/vendor/github.min.css';
                 mermaid.initialize({ theme: 'default' });
             }
 
@@ -1336,7 +1336,7 @@
                 // Update highlight.js theme
                 const highlightTheme = document.getElementById('highlight-theme');
                 if (savedTheme === 'dark') {
-                    highlightTheme.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
+                    highlightTheme.href = '/vendor/github-dark.min.css';
                     mermaid.initialize({ theme: 'dark' });
                 }
             }
@@ -1371,8 +1371,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${currentFile.name}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="/vendor/github.min.css">
+    <link rel="stylesheet" href="/vendor/katex.min.css">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;

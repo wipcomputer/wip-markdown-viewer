@@ -1,6 +1,6 @@
 {
   "name": "@wipcomputer/markdown-viewer",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.",
   "type": "module",
   "main": "server.js",
