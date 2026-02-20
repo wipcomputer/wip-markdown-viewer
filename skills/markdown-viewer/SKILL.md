@@ -85,7 +85,21 @@ Open multiple tabs to work on multiple documents at once.
 - Mermaid diagrams
 - KaTeX math equations
 
+## Troubleshooting
+
+**Page shows the index instead of my file:** The server was started with `--root` restricting access. Restart without `--root`.
+
+**Safari stalls or shows blank page:** Hard refresh (Cmd+Shift+R) or restart the server. Safari caches SSE connections aggressively.
+
+**macOS `open` drops the query string:** Use AppleScript instead:
+```bash
+osascript -e 'tell application "Safari" to open location "http://127.0.0.1:3000/view?path=/your/file.md"'
+```
+
 ## Notes
 
 - Server runs at `http://127.0.0.1:3000` by default. Use `mdview --port 8080` to change.
 - The server does not survive reboots. The curl check in quick start restarts it if needed.
+- Do NOT start the server with a file path argument. Always start bare (`mdview`). Starting with a path locks the server to that directory.
+- Drag and drop any .md file onto the homepage to view it.
+- Zero external requests. All dependencies bundled locally.
