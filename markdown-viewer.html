@@ -1038,16 +1038,19 @@
                 }
             }
 
-            // Render math equations with KaTeX
-            renderMathInElement(document.getElementById('markdown-content'), {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\[', right: '\\]', display: true},
-                    {left: '\\(', right: '\\)', display: false}
-                ],
-                throwOnError: false
-            });
+            // Render math equations with KaTeX (only if math delimiters are present)
+            const contentText = document.getElementById('markdown-content').textContent;
+            const hasMath = /\$\$/.test(contentText) || /\\\[/.test(contentText) || /\\\(/.test(contentText);
+            if (hasMath) {
+                renderMathInElement(document.getElementById('markdown-content'), {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '\\[', right: '\\]', display: true},
+                        {left: '\\(', right: '\\)', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
 
             // Generate Table of Contents and show it
             generateTOC();

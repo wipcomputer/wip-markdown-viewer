@@ -10,7 +10,7 @@
 // Opens browser to http://127.0.0.1:3000/ — pick files, view with live reload.
 
 import { createServer } from "node:http";
-import { readFileSync, watchFile, unwatchFile, existsSync, statSync } from "node:fs";
+import { readFileSync, watch, existsSync, statSync } from "node:fs";
 import { resolve, basename, dirname, join, extname } from "node:path";
 import { exec } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -62,8 +62,18 @@ function validateFilePath(filePath) {
 
 // ── Multi-file watcher ──────────────────────────────────────────────
 
-// Map<absolutePath, { clients: Set<res>, lastMtime: number }>
+// Map<absolutePath, { clients: Set<res>, watcher: FSWatcher, lastMtime: number }>
 const watchers = new Map();
+
+// SSE keepalive: ping all clients every 30s so connections don't go stale
+setInterval(() => {
+  for (const [, entry] of watchers) {
+    for (const client of entry.clients) {
+      try { client.write(`:keepalive\n\n`); }
+      catch { entry.clients.delete(client); }
+    }
+  }
+}, 30_000);
 
 function startWatching(filePath) {
   if (watchers.has(filePath)) return;
@@ -71,25 +81,38 @@ function startWatching(filePath) {
   let lastMtime = 0;
   try { lastMtime = statSync(filePath).mtimeMs; } catch {}
 
-  const entry = { clients: new Set(), lastMtime };
+  const entry = { clients: new Set(), watcher: null, lastMtime };
   watchers.set(filePath, entry);
 
-  watchFile(filePath, { interval: 500 }, (curr) => {
-    if (curr.mtimeMs > entry.lastMtime) {
-      entry.lastMtime = curr.mtimeMs;
-      console.log(`File changed: ${basename(filePath)}`);
-      for (const client of entry.clients) {
-        try { client.write(`data: reload\n\n`); }
-        catch { entry.clients.delete(client); }
-      }
-    }
-  });
+  // Use fs.watch (native OS events) instead of fs.watchFile (polling).
+  // Debounce to avoid duplicate events (common on macOS).
+  let debounce = null;
+  try {
+    entry.watcher = watch(filePath, () => {
+      if (debounce) return;
+      debounce = setTimeout(() => {
+        debounce = null;
+        let currMtime = 0;
+        try { currMtime = statSync(filePath).mtimeMs; } catch {}
+        if (currMtime > entry.lastMtime) {
+          entry.lastMtime = currMtime;
+          console.log(`File changed: ${basename(filePath)}`);
+          for (const client of entry.clients) {
+            try { client.write(`data: reload\n\n`); }
+            catch { entry.clients.delete(client); }
+          }
+        }
+      }, 200);
+    });
+  } catch (err) {
+    console.error(`Watch failed for ${filePath}: ${err.message}`);
+  }
 }
 
 function stopWatching(filePath) {
   const entry = watchers.get(filePath);
   if (entry && entry.clients.size === 0) {
-    unwatchFile(filePath);
+    if (entry.watcher) entry.watcher.close();
     watchers.delete(filePath);
   }
 }
@@ -350,7 +373,9 @@ server.listen(port, "127.0.0.1", () => {
 });
 
 process.on("SIGINT", () => {
-  for (const [path] of watchers) { unwatchFile(path); }
+  for (const [, entry] of watchers) {
+    if (entry.watcher) entry.watcher.close();
+  }
   server.close();
   process.exit(0);
 });
