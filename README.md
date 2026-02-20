@@ -1,6 +1,8 @@
 ###### WIP Computer
 # Live .md Viewer
 
+[![npm](https://img.shields.io/npm/v/@wipcomputer/markdown-viewer)](https://www.npmjs.com/package/@wipcomputer/markdown-viewer)
+
 Live markdown viewer for AI pair-editing. When you collaborate, the updates render instantly. Works with any AI agent and web browser.
 
 ## How It Works
