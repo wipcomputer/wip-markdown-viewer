@@ -36,6 +36,14 @@ mdview
 
 That's it. Global install gives you the `mdview` command anywhere.
 
+### Options
+
+```bash
+mdview                         # Start server on port 3000
+mdview --port 8080             # Use custom port
+mdview --root /path/to/dir     # Restrict file access to this directory
+```
+
 ### From source
 
 ```bash
@@ -77,6 +85,8 @@ If your tool reads a project-level instruction file... it works. The snippet is 
 - **Table of contents:** auto-generated from headings
 - **Mermaid diagrams:** flowcharts, sequence diagrams, and more
 - **Math equations:** KaTeX rendering for LaTeX
+- **Drag and drop:** drop any .md file onto the homepage to view it
+- **Zero external requests:** all dependencies bundled locally, no CDN calls
 
 ## For AI Agents
 
@@ -124,10 +134,37 @@ That's it. The server watches the file and pushes updates via SSE. You don't nee
 
 ### Notes
 
-- The `open` command works on macOS. On Linux use `xdg-open`. On Windows use `start`.
+- **macOS (Safari):** The `open` command can drop query strings when Safari is already running. Prefer AppleScript:
+  ```bash
+  osascript -e 'tell application "Safari" to open location "http://127.0.0.1:3000/view?path={absolute path}"'
+  ```
+  Fallback: `open "http://127.0.0.1:3000/view?path={absolute path}"`
+- **Linux:** Use `xdg-open`. **Windows:** Use `start`.
 - Each file gets its own URL. Multiple files can be viewed in separate tabs.
 - The server reads the file fresh on every change. No caching.
 - If the server isn't running, start it. It doesn't need any arguments.
+- Do NOT start the server with a file path argument. Always start bare (`mdview` or `node server.js`). Starting with a path locks the server to that directory.
+
+---
+
+## Troubleshooting
+
+**Page shows the index instead of my file:**
+The `--root` flag restricts which files can be viewed. If the server was started with `--root /some/dir`, files outside that directory will redirect to the homepage. Restart without `--root` to allow any path.
+
+**Safari shows a blank page or stalls:**
+Safari aggressively caches SSE connections. Hard refresh with Cmd+Shift+R, or restart the server:
+```bash
+kill $(lsof -ti :3000); mdview &
+```
+
+**`open` command drops the query string:**
+macOS `open` can strip `?path=...` when Safari is already running. Use AppleScript instead:
+```bash
+osascript -e 'tell application "Safari" to open location "http://127.0.0.1:3000/view?path=/your/file.md"'
+```
+
+Or navigate directly in the Safari URL bar.
 
 ---
 
