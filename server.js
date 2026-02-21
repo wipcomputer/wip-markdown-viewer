@@ -10,6 +10,7 @@
 // Opens browser to http://127.0.0.1:3000/ — pick files, view with live reload.
 
 import { createServer } from "node:http";
+import { createServer as createTcpServer, connect as netConnect } from "node:net";
 import { readFileSync, watch, existsSync, statSync } from "node:fs";
 import { resolve, basename, dirname, join, extname } from "node:path";
 import { exec } from "node:child_process";
@@ -365,22 +366,85 @@ const server = createServer((req, res) => {
   res.end("Not found");
 });
 
-// ── Start ────────────────────────────────────────────────────────────
+// ── UTF-8 URL proxy ─────────────────────────────────────────────────
+// Node's HTTP parser rejects raw non-ASCII bytes (e.g. ē in "Lēsa") with 400.
+// This TCP proxy intercepts the first line of each HTTP request and percent-encodes
+// any non-ASCII bytes before forwarding to the real HTTP server.
 
-server.listen(port, "127.0.0.1", () => {
-  const url = `http://127.0.0.1:${port}`;
-  console.log(`mdview: ${url}`);
-  if (rootDir) console.log(`root: ${rootDir} (file access restricted)`);
-  console.log(`Press Ctrl+C to stop.\n`);
-
-  const openCmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} "${url}"`);
-});
-
-process.on("SIGINT", () => {
-  for (const [, entry] of watchers) {
-    if (entry.watcher) entry.watcher.close();
+function percentEncodeNonAscii(buf) {
+  let out = '';
+  for (let i = 0; i < buf.length; i++) {
+    const b = buf[i];
+    if (b >= 0x20 && b <= 0x7E) {
+      out += String.fromCharCode(b);
+    } else if (b === 0x0D || b === 0x0A || b === 0x09) {
+      out += String.fromCharCode(b); // preserve CR, LF, TAB
+    } else {
+      out += '%' + b.toString(16).toUpperCase().padStart(2, '0');
+    }
   }
-  server.close();
-  process.exit(0);
+  return out;
+}
+
+// HTTP server listens on a random internal port
+server.listen(0, "127.0.0.1", () => {
+  const httpPort = server.address().port;
+
+  // TCP proxy listens on the user-facing port
+  const proxy = createTcpServer((clientSocket) => {
+    let firstChunk = true;
+    const serverSocket = netConnect(httpPort, "127.0.0.1");
+
+    clientSocket.on("data", (data) => {
+      if (firstChunk) {
+        firstChunk = false;
+        // Check if request line has non-ASCII bytes
+        const newlineIdx = data.indexOf(0x0A);
+        const requestLineEnd = newlineIdx === -1 ? data.length : newlineIdx;
+        const requestLine = data.subarray(0, requestLineEnd);
+        let hasNonAscii = false;
+        for (let i = 0; i < requestLine.length; i++) {
+          if (requestLine[i] > 0x7E || requestLine[i] < 0x20) {
+            if (requestLine[i] !== 0x0D) { hasNonAscii = true; break; }
+          }
+        }
+        if (hasNonAscii) {
+          const encoded = percentEncodeNonAscii(requestLine);
+          const rest = data.subarray(requestLineEnd);
+          console.log(`UTF-8 proxy: re-encoded request line`);
+          serverSocket.write(Buffer.from(encoded, 'ascii'));
+          serverSocket.write(rest);
+        } else {
+          serverSocket.write(data);
+        }
+      } else {
+        serverSocket.write(data);
+      }
+    });
+
+    serverSocket.pipe(clientSocket);
+    clientSocket.on("error", () => serverSocket.destroy());
+    serverSocket.on("error", () => clientSocket.destroy());
+    clientSocket.on("close", () => serverSocket.destroy());
+    serverSocket.on("close", () => clientSocket.destroy());
+  });
+
+  proxy.listen(port, "127.0.0.1", () => {
+    const url = `http://127.0.0.1:${port}`;
+    console.log(`mdview: ${url}`);
+    if (rootDir) console.log(`root: ${rootDir} (file access restricted)`);
+    console.log(`Press Ctrl+C to stop.\n`);
+
+    const openCmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+    exec(`${openCmd} "${url}"`);
+  });
+
+  process.on("SIGINT", () => {
+    for (const [, entry] of watchers) {
+      if (entry.watcher) entry.watcher.close();
+    }
+    proxy.close();
+    server.close();
+    process.exit(0);
+  });
 });
