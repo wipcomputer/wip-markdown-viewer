@@ -423,6 +423,12 @@ server.listen(0, "127.0.0.1", () => {
     });
 
     serverSocket.pipe(clientSocket);
+
+    // Keep-alive timeout: clean up stale SSE/long-poll connections (5 min)
+    const IDLE_TIMEOUT = 5 * 60 * 1000;
+    clientSocket.setTimeout(IDLE_TIMEOUT, () => clientSocket.destroy());
+    serverSocket.setTimeout(IDLE_TIMEOUT, () => serverSocket.destroy());
+
     clientSocket.on("error", () => serverSocket.destroy());
     serverSocket.on("error", () => clientSocket.destroy());
     clientSocket.on("close", () => serverSocket.destroy());
