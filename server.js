@@ -262,7 +262,7 @@ const server = createServer((req, res) => {
   // Homepage — always the picker
   if (url.pathname === "/" || url.pathname === "/index.html") {
     const viewerPath = join(__dirname, "markdown-viewer.html");
-    res.writeHead(200, { "Content-Type": "text/html" });
+    res.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-cache, no-store, must-revalidate" });
     res.end(readFileSync(viewerPath, "utf-8"));
     return;
   }
@@ -274,11 +274,11 @@ const server = createServer((req, res) => {
 
     if (filePath && existsSync(filePath)) {
       // Server-backed viewer with live reload
-      res.writeHead(200, { "Content-Type": "text/html" });
+      res.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-cache, no-store, must-revalidate" });
       res.end(getViewerHtml(filePath));
     } else if (fileName) {
       // sessionStorage-backed viewer (drag-and-drop, no live reload)
-      res.writeHead(200, { "Content-Type": "text/html" });
+      res.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-cache, no-store, must-revalidate" });
       res.end(getSessionViewerHtml(fileName));
     } else {
       res.writeHead(302, { Location: "/" });
