@@ -84,11 +84,16 @@ function startWatching(filePath) {
   const entry = { clients: new Set(), watcher: null, lastMtime };
   watchers.set(filePath, entry);
 
-  // Use fs.watch (native OS events) instead of fs.watchFile (polling).
-  // Debounce to avoid duplicate events (common on macOS).
+  // Watch the DIRECTORY, not the file. Many editors (and Claude Code's Edit tool)
+  // write to a temp file then rename, which replaces the inode. Watching the file
+  // directly breaks when the inode changes. Watching the directory and filtering
+  // by filename survives renames.
+  const dir = dirname(filePath);
+  const fileName = basename(filePath);
   let debounce = null;
   try {
-    entry.watcher = watch(filePath, () => {
+    entry.watcher = watch(dir, (eventType, changedFile) => {
+      if (changedFile !== fileName) return;
       if (debounce) return;
       debounce = setTimeout(() => {
         debounce = null;
@@ -96,7 +101,7 @@ function startWatching(filePath) {
         try { currMtime = statSync(filePath).mtimeMs; } catch {}
         if (currMtime > entry.lastMtime) {
           entry.lastMtime = currMtime;
-          console.log(`File changed: ${basename(filePath)}`);
+          console.log(`File changed: ${fileName}`);
           for (const client of entry.clients) {
             try { client.write(`data: reload\n\n`); }
             catch { entry.clients.delete(client); }
