@@ -188,8 +188,10 @@ function getViewerHtml(filePath) {
         }
       };
 
+      let evtSource = null;
       function connectSSE() {
-        const evtSource = new EventSource('/api/events?path=' + encodedPath);
+        if (evtSource) { evtSource.close(); evtSource = null; }
+        evtSource = new EventSource('/api/events?path=' + encodedPath);
         evtSource.onmessage = async function(event) {
           if (event.data === 'reload') {
             try { await serverLoad(); showStatus('Auto-refreshed', 1500); }
@@ -198,10 +200,22 @@ function getViewerHtml(filePath) {
         };
         evtSource.onerror = function() {
           evtSource.close();
+          evtSource = null;
           setTimeout(connectSSE, 2000);
         };
       }
       connectSSE();
+
+      // Free SSE connection when tab is hidden (Chrome 6-connection limit).
+      // Reconnect when tab becomes visible again.
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          if (evtSource) { evtSource.close(); evtSource = null; }
+        } else {
+          serverLoad().catch(function(){});
+          connectSSE();
+        }
+      });
     })();
     </script>`;
 
@@ -322,12 +336,20 @@ const server = createServer((req, res) => {
     }
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-store",
       Connection: "keep-alive",
     });
     res.write(`data: connected\n\n`);
     addClient(filePath, res);
     req.on("close", () => { removeClient(filePath, res); });
+
+    // Auto-close SSE after 5 minutes to prevent connection pile-up.
+    // Client reconnects automatically via EventSource.onerror.
+    const maxAge = setTimeout(() => {
+      try { res.end(); } catch {}
+      removeClient(filePath, res);
+    }, 5 * 60 * 1000);
+    req.on("close", () => clearTimeout(maxAge));
     return;
   }
 
