@@ -130,6 +130,40 @@ Both files: `generateTOC()` function queries `h1-h4` and builds sidebar list wit
 └── CLAUDE.md                      # This file
 ```
 
+## Server Version (`server.js` / `mdview` CLI)
+
+### Opening Files
+
+The URL parameter is `?path=` (NOT `?file=`):
+
+```bash
+# Correct
+open "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
+
+# WRONG — will show blank page
+open "http://127.0.0.1:3000/view?file=/absolute/path/to/file.md"
+```
+
+### Starting the Server
+
+```bash
+mdview                         # Start on port 3000
+mdview --port 8080             # Custom port
+mdview --root /path/to/dir     # Restrict file access
+```
+
+### Typical AI Agent Workflow
+
+```bash
+# 1. Start server if not running
+curl -s http://127.0.0.1:3000/ > /dev/null 2>&1 || mdview &
+
+# 2. Open a file
+open "http://127.0.0.1:3000/view?path=/absolute/path/to/file.md"
+
+# 3. Edit the file — browser updates live, no refresh needed
+```
+
 ## Important Notes
 
 - **No build process**: Files are standalone HTML, edit and refresh
