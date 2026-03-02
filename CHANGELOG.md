@@ -4,6 +4,11 @@
 
 
 
+
+## 1.2.6 (2026-03-02)
+
+Republish clean: add .npmignore to prevent ai/ folder from publishing to npm
+
 ## 1.2.5 (2026-02-25)
 
 Fix SSE connection pile-up causing blank pages when multiple tabs open in Chrome
