@@ -84,11 +84,16 @@ function startWatching(filePath) {
   const entry = { clients: new Set(), watcher: null, lastMtime };
   watchers.set(filePath, entry);
 
-  // Use fs.watch (native OS events) instead of fs.watchFile (polling).
-  // Debounce to avoid duplicate events (common on macOS).
+  // Watch the parent directory instead of the file itself.
+  // fs.watch on macOS tracks by inode. Atomic writes (write temp + rename)
+  // create a new inode, so the old watcher goes dead. Watching the directory
+  // survives atomic writes because the directory inode doesn't change.
+  const dir = dirname(filePath);
+  const target = basename(filePath);
   let debounce = null;
   try {
-    entry.watcher = watch(filePath, () => {
+    entry.watcher = watch(dir, (eventType, changedFile) => {
+      if (changedFile !== target) return;
       if (debounce) return;
       debounce = setTimeout(() => {
         debounce = null;
